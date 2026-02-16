@@ -66,6 +66,15 @@ class Household(Base):
 
     people: Mapped[list["Person"]] = relationship(back_populates="household")
     plans: Mapped[list["WeeklyPlan"]] = relationship(back_populates="household")
+    dietary_rules: Mapped[list["DietaryRule"]] = relationship(
+        back_populates="household", foreign_keys="DietaryRule.household_id"
+    )
+    food_preferences: Mapped[list["FoodPreference"]] = relationship(
+        back_populates="household", foreign_keys="FoodPreference.household_id"
+    )
+    nutrition_goals: Mapped[list["NutritionGoal"]] = relationship(
+        back_populates="household", foreign_keys="NutritionGoal.household_id"
+    )
 
 
 class Person(Base):
@@ -89,6 +98,16 @@ class Person(Base):
 
     household: Mapped["Household"] = relationship(back_populates="people")
     allergies: Mapped[list["Allergy"]] = relationship(back_populates="person")
+    dietary_rules: Mapped[list["DietaryRule"]] = relationship(
+        back_populates="person", foreign_keys="DietaryRule.person_id"
+    )
+    food_preferences: Mapped[list["FoodPreference"]] = relationship(
+        back_populates="person", foreign_keys="FoodPreference.person_id"
+    )
+    nutrition_goals: Mapped[list["NutritionGoal"]] = relationship(
+        back_populates="person", foreign_keys="NutritionGoal.person_id"
+    )
+    biometrics: Mapped[list["Biometric"]] = relationship(back_populates="person")
 
     __table_args__ = (Index("ix_person_household_id", "household_id"),)
 
@@ -132,6 +151,9 @@ class DietaryRule(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
+    household: Mapped["Household | None"] = relationship(back_populates="dietary_rules")
+    person: Mapped["Person | None"] = relationship(back_populates="dietary_rules")
+
     __table_args__ = (
         CheckConstraint(
             "household_id IS NOT NULL OR person_id IS NOT NULL",
@@ -160,6 +182,9 @@ class FoodPreference(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+    household: Mapped["Household | None"] = relationship(back_populates="food_preferences")
+    person: Mapped["Person | None"] = relationship(back_populates="food_preferences")
 
     __table_args__ = (
         CheckConstraint(
@@ -196,6 +221,9 @@ class NutritionGoal(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
+    household: Mapped["Household | None"] = relationship(back_populates="nutrition_goals")
+    person: Mapped["Person | None"] = relationship(back_populates="nutrition_goals")
+
     __table_args__ = (
         CheckConstraint(
             "household_id IS NOT NULL OR person_id IS NOT NULL",
@@ -221,6 +249,8 @@ class Biometric(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+    person: Mapped["Person"] = relationship(back_populates="biometrics")
 
 
 class WeeklyPlan(Base):
@@ -248,6 +278,9 @@ class WeeklyPlan(Base):
 
     household: Mapped["Household"] = relationship(back_populates="plans")
     meals: Mapped[list["Meal"]] = relationship(back_populates="weekly_plan")
+    shopping_list: Mapped["ShoppingList | None"] = relationship(
+        back_populates="weekly_plan", uselist=False
+    )
 
     __table_args__ = (
         Index("ix_weekly_plan_household_week", "household_id", "week_start_date"),
@@ -293,6 +326,8 @@ class ShoppingList(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+    weekly_plan: Mapped["WeeklyPlan"] = relationship(back_populates="shopping_list")
 
 
 class NutritionCache(Base):

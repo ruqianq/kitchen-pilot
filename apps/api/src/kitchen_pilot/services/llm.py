@@ -33,7 +33,7 @@ async def generate_structured[T: BaseModel](
     last_error: Exception | None = None
     for m in models:
         try:
-            return await client(
+            return await client.chat.completions.create(
                 model=m,
                 messages=messages,
                 response_model=response_model,

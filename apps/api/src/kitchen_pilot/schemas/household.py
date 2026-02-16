@@ -1,6 +1,8 @@
+import uuid
+from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class AllergenSeverity(StrEnum):
@@ -64,3 +66,174 @@ class HouseholdContext(BaseModel):
     dietary_rules: list[DietaryRuleSchema]
     preferences: list[FoodPreferenceSchema]
     nutrition_goals: list[NutritionGoalSchema]
+
+
+# --- CRUD Schemas ---
+
+
+class HouseholdCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    timezone: str = Field(default="UTC", max_length=50)
+
+
+class HouseholdUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    timezone: str | None = Field(default=None, max_length=50)
+
+
+class HouseholdResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    name: str
+    timezone: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class PersonCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    role: str = Field(min_length=1, max_length=50)
+    age_band: str | None = Field(default=None, max_length=20)
+
+
+class PersonUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    role: str | None = Field(default=None, min_length=1, max_length=50)
+    age_band: str | None = None
+
+
+class PersonResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    household_id: uuid.UUID
+    name: str
+    role: str
+    age_band: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class AllergyCreate(BaseModel):
+    person_id: uuid.UUID
+    allergen: str = Field(min_length=1, max_length=100)
+    severity: AllergenSeverity
+    notes: str | None = None
+
+
+class AllergyUpdate(BaseModel):
+    allergen: str | None = Field(default=None, min_length=1, max_length=100)
+    severity: AllergenSeverity | None = None
+    notes: str | None = None
+
+
+class AllergyResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    person_id: uuid.UUID
+    allergen: str
+    severity: AllergenSeverity
+    notes: str | None
+    created_at: datetime
+
+
+class DietaryRuleCreate(BaseModel):
+    household_id: uuid.UUID | None = None
+    person_id: uuid.UUID | None = None
+    rule: str = Field(min_length=1, max_length=255)
+    notes: str | None = None
+
+    @model_validator(mode="after")
+    def check_scope(self) -> "DietaryRuleCreate":
+        if self.household_id is None and self.person_id is None:
+            msg = "At least one of household_id or person_id must be set"
+            raise ValueError(msg)
+        return self
+
+
+class DietaryRuleUpdate(BaseModel):
+    rule: str | None = Field(default=None, min_length=1, max_length=255)
+    notes: str | None = None
+
+
+class DietaryRuleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    household_id: uuid.UUID | None
+    person_id: uuid.UUID | None
+    rule: str
+    notes: str | None
+    created_at: datetime
+
+
+class FoodPreferenceCreate(BaseModel):
+    household_id: uuid.UUID | None = None
+    person_id: uuid.UUID | None = None
+    item: str = Field(min_length=1, max_length=255)
+    preference: PreferenceLevel
+    notes: str | None = None
+
+    @model_validator(mode="after")
+    def check_scope(self) -> "FoodPreferenceCreate":
+        if self.household_id is None and self.person_id is None:
+            msg = "At least one of household_id or person_id must be set"
+            raise ValueError(msg)
+        return self
+
+
+class FoodPreferenceUpdate(BaseModel):
+    item: str | None = Field(default=None, min_length=1, max_length=255)
+    preference: PreferenceLevel | None = None
+    notes: str | None = None
+
+
+class FoodPreferenceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    household_id: uuid.UUID | None
+    person_id: uuid.UUID | None
+    item: str
+    preference: PreferenceLevel
+    notes: str | None
+    created_at: datetime
+
+
+class NutritionGoalCreate(BaseModel):
+    household_id: uuid.UUID | None = None
+    person_id: uuid.UUID | None = None
+    calories_min: int | None = Field(default=None, ge=0)
+    calories_max: int | None = Field(default=None, ge=0)
+    protein_g: float | None = Field(default=None, ge=0)
+    carbs_g: float | None = Field(default=None, ge=0)
+    fat_g: float | None = Field(default=None, ge=0)
+    fiber_g: float | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def check_scope(self) -> "NutritionGoalCreate":
+        if self.household_id is None and self.person_id is None:
+            msg = "At least one of household_id or person_id must be set"
+            raise ValueError(msg)
+        return self
+
+
+class NutritionGoalUpdate(BaseModel):
+    calories_min: int | None = Field(default=None, ge=0)
+    calories_max: int | None = Field(default=None, ge=0)
+    protein_g: float | None = Field(default=None, ge=0)
+    carbs_g: float | None = Field(default=None, ge=0)
+    fat_g: float | None = Field(default=None, ge=0)
+    fiber_g: float | None = Field(default=None, ge=0)
+
+
+class NutritionGoalResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    household_id: uuid.UUID | None
+    person_id: uuid.UUID | None
+    calories_min: int | None
+    calories_max: int | None
+    protein_g: float | None
+    carbs_g: float | None
+    fat_g: float | None
+    fiber_g: float | None
+    created_at: datetime
+    updated_at: datetime

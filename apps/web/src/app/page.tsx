@@ -9,20 +9,24 @@ export default function Home() {
           Your agentic weekly meal planner and nutrition coach.
           Chat to plan meals, get nutrition insights, and generate grocery lists.
         </p>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap justify-center gap-4">
           <a
-            href="/chat"
+            href="/onboarding"
             className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Start Planning
+            Get Started
           </a>
           <a
-            href="http://localhost:8000/docs"
+            href="/plans"
             className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            target="_blank"
-            rel="noopener noreferrer"
           >
-            API Docs
+            Meal Plans
+          </a>
+          <a
+            href="/profile"
+            className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Household Profile
           </a>
         </div>
       </main>

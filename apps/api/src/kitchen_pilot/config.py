@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     brave_api_key: str = ""
     tavily_api_key: str = ""
 
+    # Google Calendar MCP sidecar
+    gcal_mcp_url: str = ""
+
     # CORS
     cors_origins: list[str] = ["http://localhost:3000"]
 
