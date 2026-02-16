@@ -18,8 +18,7 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     default_model: str = "ollama_chat/qwen3:8b"
     fallback_models: list[str] = [
-        "ollama_chat/llama3.1:8b",
-        "ollama_chat/qwen3:14b",
+        "ollama_chat/gemma3:latest",
     ]
 
     # Security

@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncGenerator
 
 import instructor
@@ -6,11 +7,15 @@ from pydantic import BaseModel
 
 from kitchen_pilot.config import settings
 
+logger = logging.getLogger(__name__)
+
 # Configure LiteLLM defaults
 litellm.drop_params = True
 
 # Build instructor client wrapping async litellm
-client = instructor.from_litellm(litellm.acompletion)
+# Use JSON mode instead of tool calling — local Ollama models don't reliably
+# produce tool_calls but handle JSON output well.
+client = instructor.from_litellm(litellm.acompletion, mode=instructor.Mode.JSON)
 
 # Model escalation chain: try each in order until one succeeds
 MODEL_CHAIN = [settings.default_model, *settings.fallback_models]
@@ -33,6 +38,7 @@ async def generate_structured[T: BaseModel](
     last_error: Exception | None = None
     for m in models:
         try:
+            logger.info("Trying model %s for %s", m, response_model.__name__)
             return await client.chat.completions.create(
                 model=m,
                 messages=messages,
@@ -42,6 +48,7 @@ async def generate_structured[T: BaseModel](
                 api_base=settings.ollama_base_url,
             )
         except Exception as e:
+            logger.warning("Model %s failed for %s: %s", m, response_model.__name__, e)
             last_error = e
             continue
 

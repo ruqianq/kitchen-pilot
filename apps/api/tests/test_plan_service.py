@@ -158,7 +158,7 @@ class TestPromptConstruction:
 class TestAllergyValidation:
     def test_clean_plan_passes(self):
         plan = _make_day_plan()
-        violations = _validate_allergy_compliance(plan, ["peanuts"])
+        violations, warnings = _validate_allergy_compliance(plan, ["peanuts"])
         assert violations == []
 
     def test_detects_allergen_in_ingredient(self):
@@ -171,7 +171,7 @@ class TestAllergyValidation:
                 ),
             ]
         )
-        violations = _validate_allergy_compliance(plan, ["peanut"])
+        violations, warnings = _validate_allergy_compliance(plan, ["peanut"])
         assert len(violations) > 0
         assert "peanut" in violations[0].lower()
 
@@ -185,7 +185,7 @@ class TestAllergyValidation:
                 ),
             ]
         )
-        violations = _validate_allergy_compliance(plan, ["peanut"])
+        violations, warnings = _validate_allergy_compliance(plan, ["peanut"])
         assert len(violations) > 0
 
     def test_no_false_positive(self):
@@ -198,10 +198,10 @@ class TestAllergyValidation:
                 ),
             ]
         )
-        violations = _validate_allergy_compliance(plan, ["peanut"])
+        violations, warnings = _validate_allergy_compliance(plan, ["peanut"])
         assert violations == []
 
-    def test_detects_llm_flagged_warnings(self):
+    def test_llm_flagged_warnings_are_warnings_not_violations(self):
         plan = _make_day_plan(
             meals=[
                 _make_meal(
@@ -211,8 +211,9 @@ class TestAllergyValidation:
                 ),
             ]
         )
-        violations = _validate_allergy_compliance(plan, ["nuts"])
-        assert len(violations) > 0
+        violations, warnings = _validate_allergy_compliance(plan, ["nuts"])
+        assert violations == []
+        assert len(warnings) > 0
 
 
 class TestDailyTotals:

@@ -150,12 +150,14 @@ def _build_day_prompt(
 def _validate_allergy_compliance(
     day_plan: DayPlan,
     allergens: list[str],
-) -> list[str]:
+) -> tuple[list[str], list[str]]:
     """Check if any meal contains a known allergen.
 
-    Returns list of violation descriptions. Empty means compliant.
+    Returns (violations, warnings). Violations are hard-blocks (allergen found
+    in ingredient name). Warnings are informational (LLM-flagged notes).
     """
     violations = []
+    warnings = []
     allergen_set = {a.lower() for a in allergens}
 
     for meal in day_plan.meals:
@@ -168,11 +170,11 @@ def _validate_allergy_compliance(
                         f"may contain allergen '{allergen}'"
                     )
         for warning in meal.flags.allergen_warnings:
-            violations.append(
-                f"{meal.title}: LLM flagged allergen warning: {warning}"
+            warnings.append(
+                f"{meal.title}: LLM allergen note: {warning}"
             )
 
-    return violations
+    return violations, warnings
 
 
 # ── Post-processing ───────────────────────────────────────
@@ -330,7 +332,7 @@ async def generate_plan(
             ) from e
 
         # 4. Allergy validation
-        violations = _validate_allergy_compliance(day_plan, allergens)
+        violations, allergy_notes = _validate_allergy_compliance(day_plan, allergens)
         if violations and "allergy" not in override_types:
             raise ValueError(
                 f"Allergy compliance check failed for {target_str}. "
@@ -340,6 +342,8 @@ async def generate_plan(
         elif violations:
             for v in violations:
                 warnings.append(f"Allergy warning (overridden): {v}")
+        for note in allergy_notes:
+            warnings.append(note)
 
         day_plans.append(day_plan)
 

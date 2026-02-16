@@ -50,7 +50,8 @@ services:
       - DATABASE_URL=postgresql+asyncpg://kitchen:kitchen@postgres:5432/kitchen_pilot
       - LITELLM_BASE_URL=http://litellm:4000
       - OLLAMA_BASE_URL=http://ollama:11434
-      - DEFAULT_MODEL=ollama_chat/gemma3:latest
+      - DEFAULT_MODEL=ollama_chat/qwen3:8b
+      - FALLBACK_MODELS=["ollama_chat/gemma3:latest"]
       - CORS_ORIGINS=["http://localhost:3000"]
       - GCAL_MCP_URL=http://gcal-mcp:3100
     depends_on:
