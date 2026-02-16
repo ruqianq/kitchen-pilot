@@ -1,11 +1,12 @@
+from collections.abc import AsyncGenerator
+
 import instructor
 import litellm
 from pydantic import BaseModel
 
 from kitchen_pilot.config import settings
 
-# Configure LiteLLM to use our proxy
-litellm.api_base = settings.litellm_base_url
+# Configure LiteLLM defaults
 litellm.drop_params = True
 
 # Build instructor client wrapping async litellm
@@ -38,6 +39,7 @@ async def generate_structured[T: BaseModel](
                 response_model=response_model,
                 max_retries=max_retries,
                 temperature=temperature,
+                api_base=settings.ollama_base_url,
             )
         except Exception as e:
             last_error = e
@@ -46,6 +48,25 @@ async def generate_structured[T: BaseModel](
     raise RuntimeError(
         f"All models failed for {response_model.__name__}. Last error: {last_error}"
     )
+
+
+async def stream_chat_completion(
+    messages: list[dict[str, str]],
+    model: str | None = None,
+    temperature: float = 0.7,
+) -> AsyncGenerator[str, None]:
+    """Stream chat completion tokens. Yields content strings."""
+    response = await litellm.acompletion(
+        model=model or settings.default_model,
+        messages=messages,
+        temperature=temperature,
+        stream=True,
+        api_base=settings.ollama_base_url,
+    )
+    async for chunk in response:
+        delta = chunk.choices[0].delta
+        if delta.content:
+            yield delta.content
 
 
 async def chat_completion(
@@ -58,5 +79,6 @@ async def chat_completion(
         model=model or settings.default_model,
         messages=messages,
         temperature=temperature,
+        api_base=settings.ollama_base_url,
     )
     return response.choices[0].message.content or ""

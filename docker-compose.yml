@@ -50,6 +50,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://kitchen:kitchen@postgres:5432/kitchen_pilot
       - LITELLM_BASE_URL=http://litellm:4000
       - OLLAMA_BASE_URL=http://ollama:11434
+      - DEFAULT_MODEL=ollama_chat/gemma3:latest
       - CORS_ORIGINS=["http://localhost:3000"]
     depends_on:
       postgres:

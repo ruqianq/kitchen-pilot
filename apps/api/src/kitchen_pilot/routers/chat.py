@@ -1,12 +1,11 @@
 import json
 from collections.abc import AsyncGenerator
 
-import litellm
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-from kitchen_pilot.config import settings
+from kitchen_pilot.services.llm import stream_chat_completion
 
 router = APIRouter(tags=["chat"])
 
@@ -23,16 +22,8 @@ class ChatRequest(BaseModel):
 
 
 async def _stream_response(messages: list[dict[str, str]]) -> AsyncGenerator[str, None]:
-    response = await litellm.acompletion(
-        model=settings.default_model,
-        messages=messages,
-        temperature=0.7,
-        stream=True,
-    )
-    async for chunk in response:
-        delta = chunk.choices[0].delta
-        if delta.content:
-            yield json.dumps({"content": delta.content})
+    async for content in stream_chat_completion(messages):
+        yield json.dumps({"content": content})
 
 
 @router.post("/chat")
