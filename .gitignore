@@ -205,3 +205,35 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ===== Node.js =====
+
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Turbo
+.turbo/
+
+# Build output
+dist/
+
+# pnpm
+.pnpm-store/
+
+# ===== Docker =====
+docker-compose.override.yml
+
+# ===== MCP =====
+# Google OAuth credentials (never commit)
+gcp-oauth.keys.json
+.gcp-saved-tokens.json
+
+# ===== Project =====
+# Local Ollama model data
+ollama_data/
+# Postgres data
+postgres_data/
