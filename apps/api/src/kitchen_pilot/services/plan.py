@@ -41,6 +41,7 @@ from kitchen_pilot.schemas.plan import (
 )
 from kitchen_pilot.services.household import get_household_context
 from kitchen_pilot.services.llm import generate_structured
+from kitchen_pilot.services.nutrition import refine_day_nutrition
 
 logger = logging.getLogger(__name__)
 
@@ -344,6 +345,12 @@ async def generate_plan(
                 warnings.append(f"Allergy warning (overridden): {v}")
         for note in allergy_notes:
             warnings.append(note)
+
+        # 4b. Nutrition refinement (USDA lookup)
+        try:
+            day_plan = await refine_day_nutrition(session, day_plan)
+        except Exception as e:
+            logger.warning("Nutrition refinement failed for %s: %s", target_str, e)
 
         day_plans.append(day_plan)
 

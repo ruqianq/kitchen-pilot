@@ -145,15 +145,35 @@ export default function PlanDetailPage() {
                   .map((meal) => {
                     const nutrition = meal.nutrition_json as {
                       calories?: number;
+                      protein_g?: number;
+                      carbs_g?: number;
+                      fat_g?: number;
+                      fiber_g?: number;
+                      source?: string;
+                      confidence?: string;
                     } | null;
+                    const isUsda = nutrition?.source === "usda";
                     return (
                       <div
                         key={meal.id}
                         className="rounded bg-white p-3 shadow-sm dark:bg-zinc-900"
                       >
-                        <p className="text-xs font-medium uppercase text-zinc-400">
-                          {meal.meal_type}
-                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-medium uppercase text-zinc-400">
+                            {meal.meal_type}
+                          </p>
+                          {nutrition?.source && (
+                            <span
+                              className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                                isUsda
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                                  : "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+                              }`}
+                            >
+                              {isUsda ? "USDA" : "Est."}
+                            </span>
+                          )}
+                        </div>
                         <p className="font-medium text-zinc-900 dark:text-zinc-100">
                           {meal.title}
                         </p>
@@ -164,14 +184,62 @@ export default function PlanDetailPage() {
                           {meal.servings != null && (
                             <span>{meal.servings} servings</span>
                           )}
-                          {nutrition?.calories != null && (
-                            <span>{nutrition.calories} cal</span>
-                          )}
                         </div>
+                        {nutrition?.calories != null && (
+                          <div className="mt-2 grid grid-cols-5 gap-1 text-center text-[10px]">
+                            <div>
+                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                                {nutrition.calories}
+                              </p>
+                              <p className="text-zinc-400">cal</p>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                                {nutrition.protein_g ?? 0}g
+                              </p>
+                              <p className="text-zinc-400">protein</p>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                                {nutrition.carbs_g ?? 0}g
+                              </p>
+                              <p className="text-zinc-400">carbs</p>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                                {nutrition.fat_g ?? 0}g
+                              </p>
+                              <p className="text-zinc-400">fat</p>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                                {nutrition.fiber_g ?? 0}g
+                              </p>
+                              <p className="text-zinc-400">fiber</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
               </div>
+              {/* Day totals */}
+              {(() => {
+                const dayMeals = mealsByDate[dateStr];
+                const dayCal = dayMeals.reduce((s, m) => s + ((m.nutrition_json as Record<string, number> | null)?.calories ?? 0), 0);
+                const dayPro = dayMeals.reduce((s, m) => s + ((m.nutrition_json as Record<string, number> | null)?.protein_g ?? 0), 0);
+                const dayCarb = dayMeals.reduce((s, m) => s + ((m.nutrition_json as Record<string, number> | null)?.carbs_g ?? 0), 0);
+                const dayFat = dayMeals.reduce((s, m) => s + ((m.nutrition_json as Record<string, number> | null)?.fat_g ?? 0), 0);
+                if (dayCal === 0) return null;
+                return (
+                  <div className="mt-3 border-t border-zinc-200 pt-2 dark:border-zinc-700">
+                    <p className="text-[10px] font-medium uppercase text-zinc-400">Day Total</p>
+                    <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                      {dayCal} cal &middot; {Math.round(dayPro)}g P &middot; {Math.round(dayCarb)}g C &middot; {Math.round(dayFat)}g F
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           ))}
         </div>
