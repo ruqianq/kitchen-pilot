@@ -16,12 +16,17 @@ from kitchen_pilot.schemas.household import (
     AllergyCreate,
     AllergyResponse,
     AllergyUpdate,
+    BiometricCreate,
+    BiometricResponse,
+    BiometricUpdate,
     DietaryRuleCreate,
     DietaryRuleResponse,
     DietaryRuleUpdate,
     FoodPreferenceCreate,
     FoodPreferenceResponse,
     FoodPreferenceUpdate,
+    HealthConditionCreate,
+    HealthConditionResponse,
     HouseholdContext,
     HouseholdCreate,
     HouseholdResponse,
@@ -249,6 +254,57 @@ async def delete_goal(
     session: AsyncSession = Depends(get_session),  # noqa: B008
 ):
     await svc.delete_nutrition_goal(session, goal_id)
+
+
+# ── Context Agent ──────────────────────────────────────────
+
+
+# ── Biometrics ────────────────────────────────────────────
+
+
+@router.get("/people/{person_id}/biometrics", response_model=BiometricResponse | None)
+async def get_biometric(
+    person_id: uuid.UUID,
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+):
+    return await svc.get_biometric(session, person_id)
+
+
+@router.post("/people/{person_id}/biometrics", response_model=BiometricResponse, status_code=201)
+async def upsert_biometric(
+    person_id: uuid.UUID,
+    data: BiometricUpdate,
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+):
+    create_data = BiometricCreate(person_id=person_id, **data.model_dump(exclude_unset=True))
+    return await svc.upsert_biometric(session, create_data)
+
+
+# ── Health Conditions ─────────────────────────────────────
+
+
+@router.get("/health-conditions", response_model=list[HealthConditionResponse])
+async def list_health_conditions(
+    household_id: uuid.UUID = Depends(get_household_id),  # noqa: B008
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+):
+    return await svc.list_health_conditions(session, household_id)
+
+
+@router.post("/health-conditions", response_model=HealthConditionResponse, status_code=201)
+async def create_health_condition(
+    data: HealthConditionCreate,
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+):
+    return await svc.create_health_condition(session, data)
+
+
+@router.delete("/health-conditions/{condition_id}", status_code=204)
+async def delete_health_condition(
+    condition_id: uuid.UUID,
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+):
+    await svc.delete_health_condition(session, condition_id)
 
 
 # ── Context Agent ──────────────────────────────────────────

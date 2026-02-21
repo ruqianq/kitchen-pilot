@@ -5,7 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from kitchen_pilot.config import settings
 from kitchen_pilot.db.engine import engine
-from kitchen_pilot.routers import auth, chat, health, household, nutrition, plans, rag, voice
+from kitchen_pilot.routers import (
+    auth, chat, health, household, nutrition, plans, rag, search, voice,
+)
 
 
 @asynccontextmanager
@@ -37,3 +39,4 @@ app.include_router(nutrition.router)
 app.include_router(plans.router)
 app.include_router(rag.router)
 app.include_router(voice.router)
+app.include_router(search.router)

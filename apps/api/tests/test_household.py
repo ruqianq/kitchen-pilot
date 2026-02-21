@@ -33,6 +33,10 @@ def _make_person(**overrides) -> MagicMock:
     p.name = overrides.get("name", "Alice")
     p.role = overrides.get("role", "adult")
     p.age_band = overrides.get("age_band", None)
+    p.gender = overrides.get("gender", None)
+    p.date_of_birth = overrides.get("date_of_birth", None)
+    p.ethnicity = overrides.get("ethnicity", None)
+    p.activity_level = overrides.get("activity_level", None)
     p.created_at = overrides.get("created_at", NOW)
     p.updated_at = overrides.get("updated_at", NOW)
     return p

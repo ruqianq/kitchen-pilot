@@ -27,6 +27,9 @@ class NutritionInfo(BaseModel):
     carbs_g: float = Field(ge=0, description="Carbohydrates in grams")
     fat_g: float = Field(ge=0, description="Fat in grams")
     fiber_g: float = Field(ge=0, description="Fiber in grams")
+    sodium_mg: float = Field(default=0, ge=0, description="Sodium in mg")
+    sugar_g: float = Field(default=0, ge=0, description="Sugar in grams")
+    cholesterol_mg: float = Field(default=0, ge=0, description="Cholesterol in mg")
     confidence: NutritionConfidence = NutritionConfidence.ESTIMATED
     source: str = Field(default="llm", description="e.g. usda, llm, manual")
 

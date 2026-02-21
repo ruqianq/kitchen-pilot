@@ -89,6 +89,10 @@ class Person(Base):
     name: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(50))
     age_band: Mapped[str | None] = mapped_column(String(20))
+    gender: Mapped[str | None] = mapped_column(String(20))
+    date_of_birth: Mapped[str | None] = mapped_column(String(10))
+    ethnicity: Mapped[str | None] = mapped_column(String(50))
+    activity_level: Mapped[str | None] = mapped_column(String(20))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -108,6 +112,9 @@ class Person(Base):
         back_populates="person", foreign_keys="NutritionGoal.person_id"
     )
     biometrics: Mapped[list["Biometric"]] = relationship(back_populates="person")
+    health_conditions: Mapped[list["HealthCondition"]] = relationship(
+        back_populates="person"
+    )
 
     __table_args__ = (Index("ix_person_household_id", "household_id"),)
 
@@ -151,7 +158,9 @@ class DietaryRule(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    household: Mapped["Household | None"] = relationship(back_populates="dietary_rules")
+    household: Mapped["Household | None"] = relationship(
+        back_populates="dietary_rules"
+    )
     person: Mapped["Person | None"] = relationship(back_populates="dietary_rules")
 
     __table_args__ = (
@@ -214,6 +223,11 @@ class NutritionGoal(Base):
     carbs_g: Mapped[float | None] = mapped_column()
     fat_g: Mapped[float | None] = mapped_column()
     fiber_g: Mapped[float | None] = mapped_column()
+    sodium_mg: Mapped[float | None] = mapped_column()
+    cholesterol_mg: Mapped[float | None] = mapped_column()
+    sugar_g: Mapped[float | None] = mapped_column()
+    saturated_fat_g: Mapped[float | None] = mapped_column()
+    potassium_mg: Mapped[float | None] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -243,6 +257,8 @@ class Biometric(Base):
     )
     height_cm: Mapped[float | None] = mapped_column()
     weight_kg: Mapped[float | None] = mapped_column()
+    bmi: Mapped[float | None] = mapped_column()
+    waist_cm: Mapped[float | None] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -251,6 +267,27 @@ class Biometric(Base):
     )
 
     person: Mapped["Person"] = relationship(back_populates="biometrics")
+
+
+class HealthCondition(Base):
+    __tablename__ = "health_condition"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    person_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("person.id", ondelete="CASCADE")
+    )
+    condition: Mapped[str] = mapped_column(String(100))
+    severity: Mapped[str | None] = mapped_column(String(20))
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    person: Mapped["Person"] = relationship(back_populates="health_conditions")
+
+    __table_args__ = (Index("ix_health_condition_person_id", "person_id"),)
 
 
 class WeeklyPlan(Base):

@@ -59,6 +59,8 @@ services:
       - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET:-}
       - GOOGLE_OAUTH_REDIRECT_URL=${GOOGLE_OAUTH_REDIRECT_URL:-http://localhost:8000/auth/google/callback}
       - USDA_API_KEY=${USDA_API_KEY:-}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+      - BRAVE_API_KEY=${BRAVE_API_KEY:-}
       - FRONTEND_URL=http://localhost:3000
       - CORS_ORIGINS=["http://localhost:3000"]
     depends_on:

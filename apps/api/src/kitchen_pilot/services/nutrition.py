@@ -35,6 +35,9 @@ NUTRIENT_MAP: dict[int, str] = {
     1004: "fat_g",
     1005: "carbs_g",
     1079: "fiber_g",
+    1093: "sodium_mg",
+    2000: "sugar_g",
+    1253: "cholesterol_mg",
 }
 
 # Common unit → grams conversion

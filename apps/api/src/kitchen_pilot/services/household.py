@@ -13,8 +13,10 @@ from sqlalchemy.orm import selectinload
 
 from kitchen_pilot.db.models import (
     Allergy,
+    Biometric,
     DietaryRule,
     FoodPreference,
+    HealthCondition,
     Household,
     NutritionGoal,
     Person,
@@ -23,12 +25,15 @@ from kitchen_pilot.schemas.household import (
     AllergyCreate,
     AllergySchema,
     AllergyUpdate,
+    BiometricCreate,
+    BiometricUpdate,
     DietaryRuleCreate,
     DietaryRuleSchema,
     DietaryRuleUpdate,
     FoodPreferenceCreate,
     FoodPreferenceSchema,
     FoodPreferenceUpdate,
+    HealthConditionCreate,
     HouseholdContext,
     HouseholdUpdate,
     NutritionGoalCreate,
@@ -342,7 +347,11 @@ async def get_household_context(session: AsyncSession) -> HouseholdContext:
     people_result = await session.execute(
         select(Person)
         .where(Person.household_id == household.id)
-        .options(selectinload(Person.allergies))
+        .options(
+            selectinload(Person.allergies),
+            selectinload(Person.biometrics),
+            selectinload(Person.health_conditions),
+        )
     )
     people = list(people_result.scalars().all())
     people_by_id: dict[uuid.UUID, Person] = {p.id: p for p in people}
@@ -357,12 +366,27 @@ async def get_household_context(session: AsyncSession) -> HouseholdContext:
             return people_by_id[pid].name
         return "household"
 
+    def _person_schema(p: Person) -> PersonSchema:
+        # Get latest biometric if available
+        bio = p.biometrics[-1] if p.biometrics else None
+        conditions = [hc.condition for hc in p.health_conditions]
+        return PersonSchema(
+            name=p.name,
+            role=p.role,
+            age_band=p.age_band,
+            gender=p.gender,
+            date_of_birth=p.date_of_birth,
+            ethnicity=p.ethnicity,
+            activity_level=p.activity_level,
+            height_cm=bio.height_cm if bio else None,
+            weight_kg=bio.weight_kg if bio else None,
+            health_conditions=conditions,
+        )
+
     return HouseholdContext(
         household_name=household.name,
         timezone=household.timezone,
-        people=[
-            PersonSchema(name=p.name, role=p.role, age_band=p.age_band) for p in people
-        ],
+        people=[_person_schema(p) for p in people],
         allergies=[
             AllergySchema(
                 person_name=people_by_id[a.person_id].name,
@@ -399,7 +423,105 @@ async def get_household_context(session: AsyncSession) -> HouseholdContext:
                 carbs_g=g.carbs_g,
                 fat_g=g.fat_g,
                 fiber_g=g.fiber_g,
+                sodium_mg=g.sodium_mg,
+                cholesterol_mg=g.cholesterol_mg,
+                sugar_g=g.sugar_g,
+                saturated_fat_g=g.saturated_fat_g,
+                potassium_mg=g.potassium_mg,
             )
             for g in nutrition_goals
         ],
     )
+
+
+# ── Biometrics ────────────────────────────────────────────
+
+
+async def get_biometric(
+    session: AsyncSession, person_id: uuid.UUID
+) -> Biometric | None:
+    result = await session.execute(
+        select(Biometric)
+        .where(Biometric.person_id == person_id)
+        .order_by(Biometric.created_at.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
+async def upsert_biometric(
+    session: AsyncSession, data: BiometricCreate
+) -> Biometric:
+    """Create or update the biometric record for a person."""
+    person = await session.get(Person, data.person_id)
+    if person is None:
+        raise HTTPException(status_code=404, detail="Person not found")
+
+    result = await session.execute(
+        select(Biometric)
+        .where(Biometric.person_id == data.person_id)
+        .order_by(Biometric.created_at.desc())
+        .limit(1)
+    )
+    bio = result.scalar_one_or_none()
+
+    values = data.model_dump(exclude={"person_id"}, exclude_unset=True)
+    # Compute BMI if height and weight available
+    h = values.get("height_cm") or (bio.height_cm if bio else None)
+    w = values.get("weight_kg") or (bio.weight_kg if bio else None)
+    if h and w and h > 0:
+        values["bmi"] = round(w / ((h / 100) ** 2), 1)
+
+    if bio:
+        for key, value in values.items():
+            setattr(bio, key, value)
+        await session.commit()
+        await session.refresh(bio)
+        return bio
+    else:
+        bio = Biometric(person_id=data.person_id, **values)
+        session.add(bio)
+        await session.commit()
+        await session.refresh(bio)
+        return bio
+
+
+# ── Health Conditions ─────────────────────────────────────
+
+
+async def list_health_conditions(
+    session: AsyncSession, household_id: uuid.UUID
+) -> list[HealthCondition]:
+    result = await session.execute(
+        select(HealthCondition)
+        .join(Person)
+        .where(Person.household_id == household_id)
+        .order_by(HealthCondition.created_at)
+    )
+    return list(result.scalars().all())
+
+
+async def create_health_condition(
+    session: AsyncSession, data: HealthConditionCreate
+) -> HealthCondition:
+    person = await session.get(Person, data.person_id)
+    if person is None:
+        raise HTTPException(status_code=404, detail="Person not found")
+    condition = HealthCondition(**data.model_dump())
+    session.add(condition)
+    await session.commit()
+    await session.refresh(condition)
+    return condition
+
+
+async def delete_health_condition(
+    session: AsyncSession, condition_id: uuid.UUID
+) -> None:
+    result = await session.execute(
+        select(HealthCondition).where(HealthCondition.id == condition_id)
+    )
+    condition = result.scalar_one_or_none()
+    if condition is None:
+        raise HTTPException(status_code=404, detail="Health condition not found")
+    await session.delete(condition)
+    await session.commit()

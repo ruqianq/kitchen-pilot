@@ -29,6 +29,10 @@ export interface Person {
   name: string;
   role: string;
   age_band: string | null;
+  gender: string | null;
+  date_of_birth: string | null;
+  ethnicity: string | null;
+  activity_level: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,8 +75,33 @@ export interface NutritionGoal {
   carbs_g: number | null;
   fat_g: number | null;
   fiber_g: number | null;
+  sodium_mg: number | null;
+  cholesterol_mg: number | null;
+  sugar_g: number | null;
+  saturated_fat_g: number | null;
+  potassium_mg: number | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface Biometric {
+  id: string;
+  person_id: string;
+  height_cm: number | null;
+  weight_kg: number | null;
+  bmi: number | null;
+  waist_cm: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HealthCondition {
+  id: string;
+  person_id: string;
+  condition: string;
+  severity: string | null;
+  notes: string | null;
+  created_at: string;
 }
 
 // --- API ---
@@ -86,12 +115,28 @@ export const householdApi = {
     }),
 
   listPeople: () => apiFetch<Person[]>("/household/people"),
-  createPerson: (data: { name: string; role: string; age_band?: string }) =>
+  createPerson: (data: {
+    name: string;
+    role: string;
+    age_band?: string;
+    gender?: string;
+    date_of_birth?: string;
+    ethnicity?: string;
+    activity_level?: string;
+  }) =>
     apiFetch<Person>("/household/people", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  updatePerson: (id: string, data: { name?: string; role?: string; age_band?: string | null }) =>
+  updatePerson: (id: string, data: {
+    name?: string;
+    role?: string;
+    age_band?: string | null;
+    gender?: string | null;
+    date_of_birth?: string | null;
+    ethnicity?: string | null;
+    activity_level?: string | null;
+  }) =>
     apiFetch<Person>(`/household/people/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -152,6 +197,11 @@ export const householdApi = {
     carbs_g?: number;
     fat_g?: number;
     fiber_g?: number;
+    sodium_mg?: number;
+    cholesterol_mg?: number;
+    sugar_g?: number;
+    saturated_fat_g?: number;
+    potassium_mg?: number;
   }) =>
     apiFetch<NutritionGoal>("/household/goals", {
       method: "POST",
@@ -159,6 +209,35 @@ export const householdApi = {
     }),
   deleteGoal: (id: string) =>
     apiFetch<void>(`/household/goals/${id}`, { method: "DELETE" }),
+
+  // Biometrics
+  getBiometric: (personId: string) =>
+    apiFetch<Biometric | null>(`/household/people/${personId}/biometrics`),
+  upsertBiometric: (personId: string, data: {
+    height_cm?: number;
+    weight_kg?: number;
+    waist_cm?: number;
+  }) =>
+    apiFetch<Biometric>(`/household/people/${personId}/biometrics`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Health Conditions
+  listHealthConditions: () =>
+    apiFetch<HealthCondition[]>("/household/health-conditions"),
+  createHealthCondition: (data: {
+    person_id: string;
+    condition: string;
+    severity?: string;
+    notes?: string;
+  }) =>
+    apiFetch<HealthCondition>("/household/health-conditions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  deleteHealthCondition: (id: string) =>
+    apiFetch<void>(`/household/health-conditions/${id}`, { method: "DELETE" }),
 };
 
 // --- Plan Types ---
@@ -306,9 +385,15 @@ export const authApi = {
 
 // --- Chat Types ---
 
+export interface PlanMeta {
+  type: "plan_preview";
+  week_start: string;
+}
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  planMeta?: PlanMeta;
 }
 
 // --- Chat API ---
@@ -324,6 +409,7 @@ export const chatApi = {
     onToken: (token: string) => void,
     onDone: () => void,
     onError: (error: Error) => void,
+    onPlanMeta?: (meta: PlanMeta) => void,
   ): AbortController {
     const controller = new AbortController();
 
@@ -363,7 +449,9 @@ export const chatApi = {
               if (jsonStr === "[DONE]") continue;
               try {
                 const parsed = JSON.parse(jsonStr);
-                if (parsed.content) {
+                if (parsed.type === "plan_preview" && onPlanMeta) {
+                  onPlanMeta(parsed as PlanMeta);
+                } else if (parsed.content) {
                   onToken(parsed.content);
                 }
               } catch {
@@ -413,4 +501,29 @@ export const voiceApi = {
     }
     return res.blob();
   },
+};
+
+// --- Search Types ---
+
+export interface RecipeSearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+  source: string;
+  score: number;
+}
+
+export interface RecipeSearchResponse {
+  results: RecipeSearchResult[];
+  query: string;
+  provider: string;
+}
+
+// --- Search API ---
+
+export const searchApi = {
+  recipes: (query: string, maxResults = 5) =>
+    apiFetch<RecipeSearchResponse>(
+      `/search/recipes?q=${encodeURIComponent(query)}&max_results=${maxResults}`,
+    ),
 };

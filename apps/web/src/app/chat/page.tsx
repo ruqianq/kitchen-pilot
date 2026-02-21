@@ -2,7 +2,33 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Button from "@/components/Button";
-import { chatApi, voiceApi, type ChatMessage } from "@/lib/api";
+import { chatApi, planApi, voiceApi, type ChatMessage, type PlanMeta } from "@/lib/api";
+
+/** Render text with markdown-style links as clickable <a> tags. */
+function RichText({ text }: { text: string }) {
+  const parts = text.split(/(\[.*?\]\(.*?\))/g);
+  return (
+    <pre className="whitespace-pre-wrap font-sans">
+      {parts.map((part, i) => {
+        const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+        if (match) {
+          return (
+            <a
+              key={i}
+              href={match[2]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              {match[1]}
+            </a>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </pre>
+  );
+}
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -12,6 +38,7 @@ export default function ChatPage() {
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [ttsPlaying, setTtsPlaying] = useState<number | null>(null);
+  const [generatingPlan, setGeneratingPlan] = useState<number | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -64,6 +91,17 @@ export default function ChatPage() {
           setError(err.message);
           setStreaming(false);
         },
+        (meta: PlanMeta) => {
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            updated[updated.length - 1] = {
+              ...last,
+              planMeta: meta,
+            };
+            return updated;
+          });
+        },
       );
     },
     [messages, streaming],
@@ -72,6 +110,40 @@ export default function ChatPage() {
   function handleSend(e: React.FormEvent) {
     e.preventDefault();
     sendMessage(input.trim());
+  }
+
+  // --- Generate Full Plan from Chat ---
+
+  async function handleGenerateFullPlan(messageIndex: number) {
+    const msg = messages[messageIndex];
+    if (!msg?.planMeta) return;
+
+    setGeneratingPlan(messageIndex);
+    setError(null);
+
+    try {
+      const res = await planApi.generate({
+        week_start_date: msg.planMeta.week_start,
+      });
+
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[messageIndex] = {
+          ...updated[messageIndex],
+          content:
+            updated[messageIndex].content +
+            `\n\n**Plan created!** [View your 7-day meal plan](/plans/${res.plan.id})`,
+          planMeta: undefined, // hide the button after success
+        };
+        return updated;
+      });
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Plan generation failed",
+      );
+    } finally {
+      setGeneratingPlan(null);
+    }
   }
 
   // --- Push-to-Talk ---
@@ -197,9 +269,7 @@ export default function ChatPage() {
                     : "bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
                 }`}
               >
-                <pre className="whitespace-pre-wrap font-sans">
-                  {msg.content}
-                </pre>
+                <RichText text={msg.content} />
                 {msg.role === "assistant" &&
                   msg.content === "" &&
                   streaming &&
@@ -208,6 +278,66 @@ export default function ChatPage() {
                       Thinking...
                     </span>
                   )}
+                {/* Generate Full Plan button */}
+                {msg.planMeta && msg.role === "assistant" && !streaming && (
+                  <div className="mt-3 border-t border-zinc-300 pt-3 dark:border-zinc-700">
+                    <button
+                      onClick={() => handleGenerateFullPlan(i)}
+                      disabled={generatingPlan !== null}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    >
+                      {generatingPlan === i ? (
+                        <>
+                          <svg
+                            className="h-4 w-4 animate-spin"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                            />
+                          </svg>
+                          Generating full 7-day plan... (1-3 min)
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+                            />
+                          </svg>
+                          Generate Full 7-Day Plan
+                        </>
+                      )}
+                    </button>
+                    <p className="mt-1.5 text-center text-xs text-zinc-400">
+                      Week starting{" "}
+                      {new Date(msg.planMeta.week_start + "T00:00").toLocaleDateString("en-US", {
+                        weekday: "long",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                )}
                 {/* TTS button on assistant messages */}
                 {msg.role === "assistant" && msg.content.length > 0 && (
                   <button
