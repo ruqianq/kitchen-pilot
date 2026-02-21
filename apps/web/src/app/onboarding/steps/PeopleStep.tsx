@@ -84,14 +84,14 @@ export default function PeopleStep({
           <PersonCard key={p.id} person={p} onDelete={handleDelete} />
         ))}
         {people.length === 0 && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-stone-500 dark:text-stone-400">
             No family members added yet.
           </p>
         )}
       </div>
 
-      <form onSubmit={handleAdd} className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <h3 className="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      <form onSubmit={handleAdd} className="rounded-xl border border-stone-200 p-4 dark:border-stone-800">
+        <h3 className="mb-3 text-sm font-medium text-stone-700 dark:text-stone-300">
           Add Family Member
         </h3>
         <div className="flex flex-col gap-3">

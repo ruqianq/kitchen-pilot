@@ -14,10 +14,10 @@ const MEAL_ORDER: Record<string, number> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+  draft: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
   confirmed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   published: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  archived: "bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400",
+  archived: "bg-stone-200 text-stone-500 dark:bg-stone-700 dark:text-stone-400",
 };
 
 function groupByDate(meals: MealResponse[]) {
@@ -106,16 +106,16 @@ export default function PlanDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
-        <p className="text-zinc-500">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-stone-950">
+        <p className="text-stone-500">Loading...</p>
       </div>
     );
   }
 
   if (!plan) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
-        <p className="text-zinc-500">Plan not found.</p>
+      <div className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-stone-950">
+        <p className="text-stone-500">Plan not found.</p>
       </div>
     );
   }
@@ -124,12 +124,12 @@ export default function PlanDetailPage() {
   const sortedDates = Object.keys(mealsByDate).sort();
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-8 dark:bg-black">
+    <div className="min-h-screen bg-stone-50 p-8 dark:bg-stone-950">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+            <h1 className="text-3xl font-bold text-stone-800 dark:text-stone-50">
               Week of {plan.week_start_date}
             </h1>
             <span
@@ -162,9 +162,9 @@ export default function PlanDetailPage() {
           {sortedDates.map((dateStr) => (
             <div
               key={dateStr}
-              className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
+              className="rounded-xl border border-stone-200 p-4 shadow-sm dark:border-stone-800"
             >
-              <h3 className="mb-3 text-sm font-semibold text-zinc-500">
+              <h3 className="mb-3 text-sm font-semibold text-stone-500">
                 {new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
                   weekday: "long",
                   month: "short",
@@ -192,10 +192,10 @@ export default function PlanDetailPage() {
                     return (
                       <div
                         key={meal.id}
-                        className="rounded bg-white p-3 shadow-sm dark:bg-zinc-900"
+                        className="rounded bg-white p-3 shadow-sm dark:bg-stone-900"
                       >
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-medium uppercase text-zinc-400">
+                          <p className="text-xs font-medium uppercase text-stone-400">
                             {meal.meal_type}
                           </p>
                           {nutrition?.source && (
@@ -210,10 +210,10 @@ export default function PlanDetailPage() {
                             </span>
                           )}
                         </div>
-                        <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                        <p className="font-medium text-stone-800 dark:text-stone-100">
                           {meal.title}
                         </p>
-                        <div className="mt-1 flex gap-2 text-xs text-zinc-500">
+                        <div className="mt-1 flex gap-2 text-xs text-stone-500">
                           {meal.cook_time_min != null && (
                             <span>{meal.cook_time_min} min</span>
                           )}
@@ -224,34 +224,34 @@ export default function PlanDetailPage() {
                         {nutrition?.calories != null && (
                           <div className="mt-2 grid grid-cols-5 gap-1 text-center text-[10px]">
                             <div>
-                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                              <p className="font-semibold text-stone-800 dark:text-stone-100">
                                 {nutrition.calories}
                               </p>
-                              <p className="text-zinc-400">cal</p>
+                              <p className="text-stone-400">cal</p>
                             </div>
                             <div>
-                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                              <p className="font-semibold text-stone-800 dark:text-stone-100">
                                 {nutrition.protein_g ?? 0}g
                               </p>
-                              <p className="text-zinc-400">protein</p>
+                              <p className="text-stone-400">protein</p>
                             </div>
                             <div>
-                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                              <p className="font-semibold text-stone-800 dark:text-stone-100">
                                 {nutrition.carbs_g ?? 0}g
                               </p>
-                              <p className="text-zinc-400">carbs</p>
+                              <p className="text-stone-400">carbs</p>
                             </div>
                             <div>
-                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                              <p className="font-semibold text-stone-800 dark:text-stone-100">
                                 {nutrition.fat_g ?? 0}g
                               </p>
-                              <p className="text-zinc-400">fat</p>
+                              <p className="text-stone-400">fat</p>
                             </div>
                             <div>
-                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                              <p className="font-semibold text-stone-800 dark:text-stone-100">
                                 {nutrition.fiber_g ?? 0}g
                               </p>
-                              <p className="text-zinc-400">fiber</p>
+                              <p className="text-stone-400">fiber</p>
                             </div>
                           </div>
                         )}
@@ -268,9 +268,9 @@ export default function PlanDetailPage() {
                 const dayFat = dayMeals.reduce((s, m) => s + ((m.nutrition_json as Record<string, number> | null)?.fat_g ?? 0), 0);
                 if (dayCal === 0) return null;
                 return (
-                  <div className="mt-3 border-t border-zinc-200 pt-2 dark:border-zinc-700">
-                    <p className="text-[10px] font-medium uppercase text-zinc-400">Day Total</p>
-                    <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                  <div className="mt-3 border-t border-stone-200 pt-2 dark:border-stone-700">
+                    <p className="text-[10px] font-medium uppercase text-stone-400">Day Total</p>
+                    <p className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                       {dayCal} cal &middot; {Math.round(dayPro)}g P &middot; {Math.round(dayCarb)}g C &middot; {Math.round(dayFat)}g F
                     </p>
                   </div>
@@ -282,13 +282,13 @@ export default function PlanDetailPage() {
 
         {/* Shopping List */}
         {shoppingItems.length > 0 && (
-          <section className="mt-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
+          <section className="mt-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+                <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
                   Shopping List
                 </h2>
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs text-stone-400">
                   {checkedSet.size}/{shoppingItems.length} items checked
                 </p>
               </div>
@@ -306,7 +306,7 @@ export default function PlanDetailPage() {
               const sortedCats = Object.keys(byCategory).sort();
               return sortedCats.map((cat) => (
                 <div key={cat} className="mb-4">
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-stone-400">
                     {cat}
                   </h3>
                   <div className="grid grid-cols-1 gap-1 md:grid-cols-2">
@@ -315,8 +315,8 @@ export default function PlanDetailPage() {
                         key={idx}
                         className={`flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors ${
                           checkedSet.has(idx)
-                            ? "text-zinc-400 line-through"
-                            : "text-zinc-700 dark:text-zinc-300"
+                            ? "text-stone-400 line-through"
+                            : "text-stone-700 dark:text-stone-300"
                         }`}
                       >
                         <input
@@ -365,11 +365,11 @@ export default function PlanDetailPage() {
 
         {/* Summary */}
         {plan.summary_md && (
-          <section className="mt-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
-            <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+          <section className="mt-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+            <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
               Summary
             </h2>
-            <pre className="whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
+            <pre className="whitespace-pre-wrap text-sm text-stone-600 dark:text-stone-400">
               {plan.summary_md}
             </pre>
           </section>

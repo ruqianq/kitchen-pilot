@@ -115,14 +115,14 @@ export default function PreferencesStep({
 
       {/* Dietary Rules */}
       <section>
-        <h3 className="mb-3 text-lg font-medium text-zinc-900 dark:text-zinc-100">
+        <h3 className="mb-3 text-lg font-medium text-stone-800 dark:text-stone-100">
           Dietary Rules
         </h3>
         <div className="mb-3 flex flex-wrap gap-2">
           {dietaryRules.map((r) => (
             <span
               key={r.id}
-              className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1 text-xs dark:bg-zinc-800"
+              className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1 text-xs dark:bg-stone-800"
             >
               {r.rule}
               <button
@@ -130,7 +130,7 @@ export default function PreferencesStep({
                   await householdApi.deleteDietaryRule(r.id);
                   setDietaryRules(dietaryRules.filter((x) => x.id !== r.id));
                 }}
-                className="ml-1 text-zinc-400 hover:text-zinc-600"
+                className="ml-1 text-stone-400 hover:text-stone-600"
               >
                 &times;
               </button>
@@ -146,14 +146,14 @@ export default function PreferencesStep({
 
       {/* Food Preferences */}
       <section>
-        <h3 className="mb-3 text-lg font-medium text-zinc-900 dark:text-zinc-100">
+        <h3 className="mb-3 text-lg font-medium text-stone-800 dark:text-stone-100">
           Food Preferences
         </h3>
         <div className="mb-3 flex flex-wrap gap-2">
           {preferences.map((p) => (
             <span
               key={p.id}
-              className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1 text-xs dark:bg-zinc-800"
+              className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1 text-xs dark:bg-stone-800"
             >
               {p.item} ({p.preference})
               <button
@@ -161,7 +161,7 @@ export default function PreferencesStep({
                   await householdApi.deletePreference(p.id);
                   setPreferences(preferences.filter((x) => x.id !== p.id));
                 }}
-                className="ml-1 text-zinc-400 hover:text-zinc-600"
+                className="ml-1 text-stone-400 hover:text-stone-600"
               >
                 &times;
               </button>
@@ -178,14 +178,14 @@ export default function PreferencesStep({
 
       {/* Nutrition Goals */}
       <section>
-        <h3 className="mb-3 text-lg font-medium text-zinc-900 dark:text-zinc-100">
+        <h3 className="mb-3 text-lg font-medium text-stone-800 dark:text-stone-100">
           Nutrition Goals
         </h3>
         <div className="mb-3 flex flex-col gap-2">
           {goals.map((g) => (
             <div
               key={g.id}
-              className="flex items-center justify-between rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
+              className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2 text-sm dark:border-stone-800"
             >
               <span>
                 {g.calories_min && `${g.calories_min}–`}
@@ -197,7 +197,7 @@ export default function PreferencesStep({
                   await householdApi.deleteGoal(g.id);
                   setGoals(goals.filter((x) => x.id !== g.id));
                 }}
-                className="text-zinc-400 hover:text-red-500"
+                className="text-stone-400 hover:text-red-500"
               >
                 &times;
               </button>

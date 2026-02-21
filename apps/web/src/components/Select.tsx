@@ -10,13 +10,13 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 export default function Select({ label, options, className = "", ...props }: SelectProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
         {label}
       </label>
       <select
-        className={`rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none
-          transition-colors focus:border-zinc-900
-          dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-400
+        className={`rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm outline-none
+          transition-colors focus:border-amber-600
+          dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100 dark:focus:border-amber-400
           ${className}`}
         {...props}
       >

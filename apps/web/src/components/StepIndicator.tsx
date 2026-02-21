@@ -14,8 +14,8 @@ export default function StepIndicator({ steps, currentStep }: StepIndicatorProps
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium
                 ${i <= currentStep
-                  ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900"
-                  : "bg-zinc-200 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500"
+                  ? "bg-amber-700 text-white dark:bg-amber-500 dark:text-stone-950"
+                  : "bg-stone-200 text-stone-500 dark:bg-stone-800 dark:text-stone-500"
                 }`}
             >
               {i + 1}
@@ -23,8 +23,8 @@ export default function StepIndicator({ steps, currentStep }: StepIndicatorProps
             <span
               className={`mt-1 text-xs ${
                 i <= currentStep
-                  ? "text-zinc-900 dark:text-zinc-100"
-                  : "text-zinc-400 dark:text-zinc-600"
+                  ? "text-stone-800 dark:text-stone-100"
+                  : "text-stone-400 dark:text-stone-600"
               }`}
             >
               {step}
@@ -34,8 +34,8 @@ export default function StepIndicator({ steps, currentStep }: StepIndicatorProps
             <div
               className={`mx-2 h-0.5 w-12 sm:w-20 ${
                 i < currentStep
-                  ? "bg-zinc-900 dark:bg-zinc-50"
-                  : "bg-zinc-200 dark:bg-zinc-800"
+                  ? "bg-amber-700 dark:bg-amber-500"
+                  : "bg-stone-200 dark:bg-stone-800"
               }`}
             />
           )}

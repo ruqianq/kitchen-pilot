@@ -14,11 +14,11 @@ export default function NavBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="border-b border-zinc-200 bg-white px-6 py-3 dark:border-zinc-800 dark:bg-black">
+    <nav className="border-b border-stone-200 bg-stone-50 px-6 py-3 dark:border-stone-800 dark:bg-stone-950">
       <div className="mx-auto flex max-w-4xl items-center justify-between">
         <Link
           href="/"
-          className="text-lg font-bold text-zinc-900 dark:text-zinc-50"
+          className="text-lg font-bold text-stone-900 dark:text-stone-50"
         >
           Kitchen Pilot
         </Link>
@@ -29,8 +29,8 @@ export default function NavBar() {
               href={link.href}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 pathname === link.href
-                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                  : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                  ? "bg-amber-700 text-white dark:bg-amber-500 dark:text-stone-950"
+                  : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800"
               }`}
             >
               {link.label}

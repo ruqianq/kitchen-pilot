@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Kitchen Pilot",
-  description: "Agentic weekly meal planner + nutrition coach",
+  description: "Your family's weekly meal planner and nutrition companion",
 };
 
 export default function RootLayout({

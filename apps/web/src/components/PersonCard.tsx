@@ -10,12 +10,12 @@ interface PersonCardProps {
 
 export default function PersonCard({ person, onDelete }: PersonCardProps) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+    <div className="flex items-center justify-between rounded-xl border border-stone-200 p-4 shadow-sm dark:border-stone-700">
       <div>
-        <p className="font-medium text-zinc-900 dark:text-zinc-100">
+        <p className="font-medium text-stone-900 dark:text-stone-100">
           {person.name}
         </p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-stone-500 dark:text-stone-400">
           {person.role}
           {person.age_band ? ` \u00B7 ${person.age_band}` : ""}
         </p>

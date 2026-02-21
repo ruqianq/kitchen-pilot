@@ -16,10 +16,10 @@ function getNextMonday(): string {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+  draft: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
   confirmed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   published: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  archived: "bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400",
+  archived: "bg-stone-200 text-stone-500 dark:bg-stone-700 dark:text-stone-400",
 };
 
 export default function PlansPage() {
@@ -61,15 +61,15 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-8 dark:bg-black">
+    <div className="min-h-screen bg-stone-50 p-8 dark:bg-stone-950">
       <div className="mx-auto max-w-4xl">
-        <h1 className="mb-8 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+        <h1 className="mb-8 text-3xl font-bold text-stone-800 dark:text-stone-50">
           Meal Plans
         </h1>
 
         {/* Generator */}
-        <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
-          <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+          <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
             Generate New Plan
           </h2>
           <div className="flex flex-col gap-4">
@@ -122,14 +122,14 @@ export default function PlansPage() {
         </section>
 
         {/* Plan List */}
-        <section className="rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
-          <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <section className="rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+          <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
             Existing Plans
           </h2>
           {loading ? (
-            <p className="text-zinc-500">Loading...</p>
+            <p className="text-stone-500">Loading...</p>
           ) : plans.length === 0 ? (
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-stone-400">
               No plans yet. Generate your first one above!
             </p>
           ) : (
@@ -138,10 +138,10 @@ export default function PlansPage() {
                 <a
                   key={p.id}
                   href={`/plans/${p.id}`}
-                  className="flex items-center justify-between rounded-lg border border-zinc-100 px-4 py-3 transition-colors hover:bg-zinc-100 dark:border-zinc-800 dark:hover:bg-zinc-900"
+                  className="flex items-center justify-between rounded-lg border border-stone-100 px-4 py-3 transition-colors hover:bg-stone-100 dark:border-stone-800 dark:hover:bg-stone-900"
                 >
                   <div>
-                    <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                    <p className="font-medium text-stone-800 dark:text-stone-100">
                       Week of {p.week_start_date}
                     </p>
                     <span
@@ -150,7 +150,7 @@ export default function PlansPage() {
                       {p.status}
                     </span>
                   </div>
-                  <span className="text-xs text-zinc-400">
+                  <span className="text-xs text-stone-400">
                     {new Date(p.created_at).toLocaleDateString()}
                   </span>
                 </a>

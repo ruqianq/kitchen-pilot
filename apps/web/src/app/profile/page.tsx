@@ -406,16 +406,16 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
-        <p className="text-zinc-500">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-stone-950">
+        <p className="text-stone-500">Loading...</p>
       </div>
     );
   }
 
   if (!household) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-50 dark:bg-black">
-        <p className="text-zinc-500">No household set up yet.</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-stone-50 dark:bg-stone-950">
+        <p className="text-stone-500">No household set up yet.</p>
         <a href="/onboarding">
           <Button>Get Started</Button>
         </a>
@@ -424,15 +424,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-8 dark:bg-black">
+    <div className="min-h-screen bg-stone-50 p-8 dark:bg-stone-950">
       <div className="mx-auto max-w-3xl">
-        <h1 className="mb-8 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+        <h1 className="mb-8 text-3xl font-bold text-stone-800 dark:text-stone-50">
           Household Profile
         </h1>
 
         {/* Household Info */}
-        <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
-          <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+          <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
             Household
           </h2>
           {editingName ? (
@@ -448,10 +448,10 @@ export default function ProfilePage() {
           ) : (
             <div className="flex items-center gap-4">
               <div>
-                <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+                <p className="text-lg font-medium text-stone-800 dark:text-stone-100">
                   {household.name}
                 </p>
-                <p className="text-sm text-zinc-500">{household.timezone}</p>
+                <p className="text-sm text-stone-500">{household.timezone}</p>
               </div>
               <Button
                 variant="secondary"
@@ -468,8 +468,8 @@ export default function ProfilePage() {
         </section>
 
         {/* Google Calendar */}
-        <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
-          <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+          <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
             Google Calendar
           </h2>
           {googleStatus?.connected ? (
@@ -479,7 +479,7 @@ export default function ProfilePage() {
                   Connected
                 </p>
                 {googleStatus.token_expiry && (
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-stone-400">
                     Token expires: {new Date(googleStatus.token_expiry).toLocaleString()}
                   </p>
                 )}
@@ -497,7 +497,7 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div>
-              <p className="mb-3 text-sm text-zinc-500">
+              <p className="mb-3 text-sm text-stone-500">
                 Connect your Google Calendar to publish meal plans as calendar events.
               </p>
               <Button
@@ -519,9 +519,9 @@ export default function ProfilePage() {
         </section>
 
         {/* People */}
-        <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
+        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
               Family Members ({people.length})
             </h2>
             <Button
@@ -540,7 +540,7 @@ export default function ProfilePage() {
           {showAddPerson && (
             <form
               onSubmit={addPerson}
-              className="mt-4 rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700"
+              className="mt-4 rounded-lg border border-dashed border-stone-300 p-4 dark:border-stone-600"
             >
               <div className="flex flex-col gap-3">
                 <Input
@@ -573,11 +573,11 @@ export default function ProfilePage() {
 
         {/* Health Profiles */}
         {people.length > 0 && (
-          <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
-            <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+          <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+            <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
               Health Profiles
             </h2>
-            <p className="mb-4 text-sm text-zinc-500">
+            <p className="mb-4 text-sm text-stone-500">
               Add health data per person for personalized nutrition recommendations.
             </p>
             <div className="flex flex-col gap-4">
@@ -589,10 +589,10 @@ export default function ProfilePage() {
                 return (
                   <div
                     key={person.id}
-                    className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
+                    className="rounded-lg border border-stone-200 p-4 dark:border-stone-800"
                   >
                     <div className="mb-3 flex items-center justify-between">
-                      <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
+                      <h3 className="font-medium text-stone-800 dark:text-stone-100">
                         {person.name}
                       </h3>
                       <Button
@@ -671,7 +671,7 @@ export default function ProfilePage() {
 
                         {/* Health Conditions */}
                         <div>
-                          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
                             Health Conditions
                           </label>
                           <div className="mb-2 flex flex-wrap gap-2">
@@ -692,7 +692,7 @@ export default function ProfilePage() {
                           </div>
                           <div className="flex gap-2">
                             <select
-                              className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                              className="flex-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100"
                               value={newCondition}
                               onChange={(e) => setNewCondition(e.target.value)}
                             >
@@ -731,41 +731,41 @@ export default function ProfilePage() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="text-sm text-zinc-600 dark:text-zinc-400">
+                      <div className="text-sm text-stone-600 dark:text-stone-400">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                           {person.gender && (
                             <>
-                              <span className="text-zinc-500">Gender:</span>
+                              <span className="text-stone-500">Gender:</span>
                               <span>{formatCondition(person.gender)}</span>
                             </>
                           )}
                           {person.date_of_birth && (
                             <>
-                              <span className="text-zinc-500">DOB:</span>
+                              <span className="text-stone-500">DOB:</span>
                               <span>{person.date_of_birth}</span>
                             </>
                           )}
                           {person.activity_level && (
                             <>
-                              <span className="text-zinc-500">Activity:</span>
+                              <span className="text-stone-500">Activity:</span>
                               <span>{formatCondition(person.activity_level)}</span>
                             </>
                           )}
                           {bio?.height_cm && (
                             <>
-                              <span className="text-zinc-500">Height:</span>
+                              <span className="text-stone-500">Height:</span>
                               <span>{bio.height_cm} cm</span>
                             </>
                           )}
                           {bio?.weight_kg && (
                             <>
-                              <span className="text-zinc-500">Weight:</span>
+                              <span className="text-stone-500">Weight:</span>
                               <span>{bio.weight_kg} kg</span>
                             </>
                           )}
                           {bio?.bmi && (
                             <>
-                              <span className="text-zinc-500">BMI:</span>
+                              <span className="text-stone-500">BMI:</span>
                               <span>{bio.bmi.toFixed(1)}</span>
                             </>
                           )}
@@ -786,7 +786,7 @@ export default function ProfilePage() {
                           !person.date_of_birth &&
                           !bio?.height_cm &&
                           conditions.length === 0 && (
-                            <p className="text-zinc-400">
+                            <p className="text-stone-400">
                               No health data yet. Click Edit to add.
                             </p>
                           )}
@@ -800,9 +800,9 @@ export default function ProfilePage() {
         )}
 
         {/* Allergies */}
-        <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
+        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
               Allergies
             </h2>
             <Button
@@ -827,13 +827,13 @@ export default function ProfilePage() {
               />
             ))}
             {allergies.length === 0 && (
-              <p className="text-sm text-zinc-400">No allergies recorded.</p>
+              <p className="text-sm text-stone-400">No allergies recorded.</p>
             )}
           </div>
           {showAddAllergy && (
             <form
               onSubmit={addAllergy}
-              className="mt-4 rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700"
+              className="mt-4 rounded-lg border border-dashed border-stone-300 p-4 dark:border-stone-600"
             >
               <div className="flex flex-col gap-3">
                 <Select
@@ -865,9 +865,9 @@ export default function ProfilePage() {
         </section>
 
         {/* Dietary Rules */}
-        <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
+        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
               Dietary Rules
             </h2>
             <Button
@@ -885,28 +885,28 @@ export default function ProfilePage() {
             {dietaryRules.map((r) => (
               <div
                 key={r.id}
-                className="flex items-center justify-between rounded-lg bg-zinc-50 px-4 py-2 dark:bg-zinc-900"
+                className="flex items-center justify-between rounded-lg bg-stone-50 px-4 py-2 dark:bg-stone-900"
               >
                 <span className="text-sm">
-                  <span className="text-zinc-500">{scopeLabel(r.household_id, r.person_id)}:</span>{" "}
+                  <span className="text-stone-500">{scopeLabel(r.household_id, r.person_id)}:</span>{" "}
                   {r.rule}
                 </span>
                 <button
                   onClick={() => deleteRule(r.id)}
-                  className="text-zinc-400 hover:text-red-500"
+                  className="text-stone-400 hover:text-red-500"
                 >
                   &times;
                 </button>
               </div>
             ))}
             {dietaryRules.length === 0 && (
-              <p className="text-sm text-zinc-400">No dietary rules.</p>
+              <p className="text-sm text-stone-400">No dietary rules.</p>
             )}
           </div>
           {showAddRule && (
             <form
               onSubmit={addRule}
-              className="mt-4 rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700"
+              className="mt-4 rounded-lg border border-dashed border-stone-300 p-4 dark:border-stone-600"
             >
               <div className="flex flex-col gap-3">
                 <Select
@@ -930,9 +930,9 @@ export default function ProfilePage() {
         </section>
 
         {/* Food Preferences */}
-        <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
+        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
               Food Preferences
             </h2>
             <Button
@@ -950,29 +950,29 @@ export default function ProfilePage() {
             {preferences.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between rounded-lg bg-zinc-50 px-4 py-2 dark:bg-zinc-900"
+                className="flex items-center justify-between rounded-lg bg-stone-50 px-4 py-2 dark:bg-stone-900"
               >
                 <span className="text-sm">
-                  <span className="text-zinc-500">{scopeLabel(p.household_id, p.person_id)}:</span>{" "}
+                  <span className="text-stone-500">{scopeLabel(p.household_id, p.person_id)}:</span>{" "}
                   {p.item}{" "}
-                  <span className="text-zinc-400">({p.preference})</span>
+                  <span className="text-stone-400">({p.preference})</span>
                 </span>
                 <button
                   onClick={() => deletePref(p.id)}
-                  className="text-zinc-400 hover:text-red-500"
+                  className="text-stone-400 hover:text-red-500"
                 >
                   &times;
                 </button>
               </div>
             ))}
             {preferences.length === 0 && (
-              <p className="text-sm text-zinc-400">No food preferences.</p>
+              <p className="text-sm text-stone-400">No food preferences.</p>
             )}
           </div>
           {showAddPref && (
             <form
               onSubmit={addPref}
-              className="mt-4 rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700"
+              className="mt-4 rounded-lg border border-dashed border-stone-300 p-4 dark:border-stone-600"
             >
               <div className="flex flex-col gap-3">
                 <Select
@@ -1004,9 +1004,9 @@ export default function ProfilePage() {
         </section>
 
         {/* Nutrition Goals */}
-        <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
+        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
               Nutrition Goals
             </h2>
             <Button
@@ -1024,10 +1024,10 @@ export default function ProfilePage() {
             {goals.map((g) => (
               <div
                 key={g.id}
-                className="flex items-center justify-between rounded-lg bg-zinc-50 px-4 py-2 dark:bg-zinc-900"
+                className="flex items-center justify-between rounded-lg bg-stone-50 px-4 py-2 dark:bg-stone-900"
               >
                 <span className="text-sm">
-                  <span className="text-zinc-500">{scopeLabel(g.household_id, g.person_id)}:</span>{" "}
+                  <span className="text-stone-500">{scopeLabel(g.household_id, g.person_id)}:</span>{" "}
                   {g.calories_min != null && `${g.calories_min}\u2013`}
                   {g.calories_max != null && `${g.calories_max} cal`}
                   {g.protein_g != null && ` \u00B7 ${g.protein_g}g protein`}
@@ -1038,20 +1038,20 @@ export default function ProfilePage() {
                 </span>
                 <button
                   onClick={() => deleteGoal(g.id)}
-                  className="text-zinc-400 hover:text-red-500"
+                  className="text-stone-400 hover:text-red-500"
                 >
                   &times;
                 </button>
               </div>
             ))}
             {goals.length === 0 && (
-              <p className="text-sm text-zinc-400">No nutrition goals.</p>
+              <p className="text-sm text-stone-400">No nutrition goals.</p>
             )}
           </div>
           {showAddGoal && (
             <form
               onSubmit={addGoal}
-              className="mt-4 rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700"
+              className="mt-4 rounded-lg border border-dashed border-stone-300 p-4 dark:border-stone-600"
             >
               <div className="flex flex-col gap-3">
                 <Select

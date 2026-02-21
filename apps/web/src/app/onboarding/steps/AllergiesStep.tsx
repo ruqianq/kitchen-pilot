@@ -66,8 +66,8 @@ export default function AllergiesStep({ people, onNext, onBack }: AllergiesStepP
       {people.map((person) => {
         const personAllergies = allergies.filter((a) => a.person_id === person.id);
         return (
-          <div key={person.id} className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-            <h3 className="mb-2 font-medium text-zinc-900 dark:text-zinc-100">
+          <div key={person.id} className="rounded-xl border border-stone-200 p-4 shadow-sm dark:border-stone-800">
+            <h3 className="mb-2 font-medium text-stone-800 dark:text-stone-100">
               {person.name}
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -80,15 +80,15 @@ export default function AllergiesStep({ people, onNext, onBack }: AllergiesStepP
                 />
               ))}
               {personAllergies.length === 0 && (
-                <p className="text-xs text-zinc-400">No allergies</p>
+                <p className="text-xs text-stone-400">No allergies</p>
               )}
             </div>
           </div>
         );
       })}
 
-      <form onSubmit={handleAdd} className="rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700">
-        <h3 className="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      <form onSubmit={handleAdd} className="rounded-xl border border-dashed border-stone-300 p-4 dark:border-stone-600">
+        <h3 className="mb-3 text-sm font-medium text-stone-700 dark:text-stone-300">
           Add Allergy
         </h3>
         <div className="flex flex-col gap-3">

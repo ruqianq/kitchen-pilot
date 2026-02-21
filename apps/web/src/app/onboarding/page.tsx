@@ -37,19 +37,19 @@ export default function OnboardingPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
-        <p className="text-zinc-500">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-stone-950">
+        <p className="text-stone-500">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-8 dark:bg-black">
+    <div className="min-h-screen bg-stone-50 p-8 dark:bg-stone-950">
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-2 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+        <h1 className="mb-2 text-3xl font-bold text-stone-800 dark:text-stone-50">
           Set Up Your Household
         </h1>
-        <p className="mb-6 text-zinc-500 dark:text-zinc-400">
+        <p className="mb-6 text-stone-500 dark:text-stone-400">
           Tell us about your family so we can plan meals tailored to everyone.
         </p>
 
