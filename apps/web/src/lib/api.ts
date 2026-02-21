@@ -383,3 +383,34 @@ export const chatApi = {
     return controller;
   },
 };
+
+// --- Voice API ---
+
+export const voiceApi = {
+  stt: async (audioBlob: Blob): Promise<{ text: string; language: string | null }> => {
+    const form = new FormData();
+    form.append("file", audioBlob, "recording.webm");
+    const res = await fetch(`${API_BASE}/voice/stt`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) {
+      const detail = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(detail.detail ?? "Transcription failed");
+    }
+    return res.json();
+  },
+
+  tts: async (text: string, voice = "nova", speed = 1.0): Promise<Blob> => {
+    const res = await fetch(`${API_BASE}/voice/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice, speed }),
+    });
+    if (!res.ok) {
+      const detail = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(detail.detail ?? "Speech synthesis failed");
+    }
+    return res.blob();
+  },
+};

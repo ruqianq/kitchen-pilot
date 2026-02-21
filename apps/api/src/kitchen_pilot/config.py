@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # Nutrition
     usda_api_key: str = ""
 
+    # Voice
+    whisper_model: str = "whisper-1"
+    tts_voice: str = "nova"
+
     # Search (optional)
     brave_api_key: str = ""
     tavily_api_key: str = ""
