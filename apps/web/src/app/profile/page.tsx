@@ -10,11 +10,12 @@ import type {
   Allergy,
   DietaryRule,
   FoodPreference,
+  GoogleAuthStatusResponse,
   Household,
   NutritionGoal,
   Person,
 } from "@/lib/api";
-import { householdApi } from "@/lib/api";
+import { authApi, householdApi } from "@/lib/api";
 
 const ROLES = [
   { value: "adult", label: "Adult" },
@@ -58,6 +59,10 @@ export default function ProfilePage() {
   const [preferences, setPreferences] = useState<FoodPreference[]>([]);
   const [goals, setGoals] = useState<NutritionGoal[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Google Calendar connection
+  const [googleStatus, setGoogleStatus] = useState<GoogleAuthStatusResponse | null>(null);
+  const [connectingGoogle, setConnectingGoogle] = useState(false);
 
   // Editing state for household name
   const [editingName, setEditingName] = useState(false);
@@ -121,8 +126,19 @@ export default function ProfilePage() {
       } finally {
         setLoading(false);
       }
+      // Load Google Calendar status (non-blocking)
+      authApi.googleStatus().then(setGoogleStatus).catch(() => {});
     }
     load();
+  }, []);
+
+  // Handle redirect back from Google OAuth
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("google") === "connected") {
+      authApi.googleStatus().then(setGoogleStatus).catch(() => {});
+      window.history.replaceState({}, "", "/profile");
+    }
   }, []);
 
   async function saveName() {
@@ -315,6 +331,57 @@ export default function ProfilePage() {
                 }}
               >
                 Edit
+              </Button>
+            </div>
+          )}
+        </section>
+
+        {/* Google Calendar */}
+        <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
+          <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+            Google Calendar
+          </h2>
+          {googleStatus?.connected ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                  Connected
+                </p>
+                {googleStatus.token_expiry && (
+                  <p className="text-xs text-zinc-400">
+                    Token expires: {new Date(googleStatus.token_expiry).toLocaleString()}
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="secondary"
+                className="px-3 py-1 text-xs"
+                onClick={async () => {
+                  await authApi.googleDisconnect();
+                  setGoogleStatus({ connected: false, scopes: null, token_expiry: null });
+                }}
+              >
+                Disconnect
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <p className="mb-3 text-sm text-zinc-500">
+                Connect your Google Calendar to publish meal plans as calendar events.
+              </p>
+              <Button
+                onClick={async () => {
+                  setConnectingGoogle(true);
+                  try {
+                    const { authorization_url } = await authApi.googleStart();
+                    window.location.href = authorization_url;
+                  } catch {
+                    setConnectingGoogle(false);
+                  }
+                }}
+                disabled={connectingGoogle}
+              >
+                {connectingGoogle ? "Redirecting..." : "Connect Google Calendar"}
               </Button>
             </div>
           )}

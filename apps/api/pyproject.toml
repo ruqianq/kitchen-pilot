@@ -16,6 +16,9 @@ dependencies = [
     "pgvector>=0.3.6",
     "cryptography>=44.0.0",
     "httpx>=0.28.0",
+    "google-api-python-client>=2.100.0",
+    "google-auth>=2.25.0",
+    "google-auth-httplib2>=0.2.0",
 ]
 
 [project.optional-dependencies]

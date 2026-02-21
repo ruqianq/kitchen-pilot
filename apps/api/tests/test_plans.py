@@ -80,9 +80,9 @@ async def test_delete_plan_not_found(client):
 
 
 @pytest.mark.asyncio
-async def test_publish_no_mcp(client):
+async def test_publish_no_calendar(client):
     with patch(
-        "kitchen_pilot.routers.plans.calendar_mcp.is_available",
+        "kitchen_pilot.routers.plans.calendar_service.is_available",
         new_callable=AsyncMock,
     ) as mock:
         mock.return_value = False
@@ -90,7 +90,7 @@ async def test_publish_no_mcp(client):
             "/plan/publish",
             json={"plan_id": str(uuid.uuid4())},
         )
-        assert response.status_code == 503
+        assert response.status_code == 400
 
 
 @pytest.mark.asyncio

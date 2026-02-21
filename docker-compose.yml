@@ -54,6 +54,11 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - DEFAULT_MODEL=gpt-4o-mini
       - FALLBACK_MODELS=["ollama_chat/qwen3:8b","ollama_chat/gemma3:latest"]
+      - FERNET_KEY=${FERNET_KEY:-}
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID:-}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET:-}
+      - GOOGLE_OAUTH_REDIRECT_URL=${GOOGLE_OAUTH_REDIRECT_URL:-http://localhost:8000/auth/google/callback}
+      - FRONTEND_URL=http://localhost:3000
       - CORS_ORIGINS=["http://localhost:3000"]
     depends_on:
       postgres:

@@ -22,7 +22,7 @@ from kitchen_pilot.schemas.plan_api import (
     WeeklyPlanDetailResponse,
     WeeklyPlanResponse,
 )
-from kitchen_pilot.services import calendar_mcp
+from kitchen_pilot.services import calendar_service
 from kitchen_pilot.services import plan as plan_svc
 
 router = APIRouter(prefix="/plan", tags=["plan"])
@@ -96,15 +96,16 @@ async def get_shopping_list(
 @router.post("/publish", response_model=PlanPublishResponse)
 async def publish_plan(
     request: PlanPublishRequest,
+    household_id: uuid.UUID = Depends(get_household_id),  # noqa: B008
     session: AsyncSession = Depends(get_session),  # noqa: B008
 ):
-    """Publish a plan's meals to Google Calendar via MCP."""
-    if not await calendar_mcp.is_available():
+    """Publish a plan's meals to Google Calendar."""
+    if not await calendar_service.is_available(session, household_id):
         raise HTTPException(
-            status_code=503,
+            status_code=400,
             detail=(
-                "Google Calendar MCP sidecar is not available. "
-                "Ensure it is running and gcal_mcp_url is configured."
+                "Google Calendar is not connected. "
+                "Please connect it from your profile."
             ),
         )
 
@@ -114,7 +115,9 @@ async def publish_plan(
 
     weekly_plan = WeeklyPlan.model_validate(plan.plan_json)
 
-    events_created, event_ids = await calendar_mcp.publish_plan_to_calendar(
+    events_created, event_ids = await calendar_service.publish_plan_to_calendar(
+        session=session,
+        household_id=household_id,
         day_plans=weekly_plan.days,
         weekly_plan_id=str(plan.id),
         calendar_id=request.calendar_id,
