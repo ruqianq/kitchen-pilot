@@ -10,6 +10,7 @@ Orchestrates the per-day decomposition pipeline:
 """
 
 import logging
+import re
 import uuid
 from collections import defaultdict
 from datetime import date, timedelta
@@ -148,6 +149,30 @@ def _build_day_prompt(
 # ── Validation ────────────────────────────────────────────
 
 
+_SAFE_SUFFIXES = re.compile(
+    r"[\s-]free\b|[\s-]substitute\b|[\s-]alternative\b|[\s-]replacement\b",
+    re.IGNORECASE,
+)
+
+
+def _is_false_positive(ingredient_name: str, allergen: str) -> bool:
+    """Return True if the allergen match is actually a safe substitute.
+
+    E.g. "Cheddar Cheese (dairy-free)" contains "dairy" but is safe.
+    """
+    ing_lower = ingredient_name.lower()
+    start = 0
+    while True:
+        idx = ing_lower.find(allergen, start)
+        if idx == -1:
+            return True  # no more matches — all were safe
+        after = ing_lower[idx + len(allergen):]
+        if _SAFE_SUFFIXES.match(after):
+            start = idx + len(allergen)
+            continue
+        return False  # found a real match
+
+
 def _validate_allergy_compliance(
     day_plan: DayPlan,
     allergens: list[str],
@@ -156,6 +181,9 @@ def _validate_allergy_compliance(
 
     Returns (violations, warnings). Violations are hard-blocks (allergen found
     in ingredient name). Warnings are informational (LLM-flagged notes).
+
+    Ingredients labeled as allergen-free (e.g. "dairy-free cheese") are not
+    flagged as violations.
     """
     violations = []
     warnings = []
@@ -165,7 +193,9 @@ def _validate_allergy_compliance(
         for ingredient in meal.ingredients:
             ing_lower = ingredient.name.lower()
             for allergen in allergen_set:
-                if allergen in ing_lower:
+                if allergen in ing_lower and not _is_false_positive(
+                    ing_lower, allergen
+                ):
                     violations.append(
                         f"{meal.title}: ingredient '{ingredient.name}' "
                         f"may contain allergen '{allergen}'"

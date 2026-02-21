@@ -201,6 +201,98 @@ class TestAllergyValidation:
         violations, warnings = _validate_allergy_compliance(plan, ["peanut"])
         assert violations == []
 
+    def test_dairy_free_is_not_violation(self):
+        """Ingredients labeled dairy-free should not trigger dairy allergy."""
+        plan = _make_day_plan(
+            meals=[
+                _make_meal(
+                    ingredients=[
+                        Ingredient(
+                            name="Cheddar Cheese (dairy-free)",
+                            quantity=1,
+                            unit="cup",
+                        ),
+                    ]
+                ),
+            ]
+        )
+        violations, warnings = _validate_allergy_compliance(plan, ["dairy"])
+        assert violations == []
+
+    def test_gluten_free_bread_is_not_violation(self):
+        plan = _make_day_plan(
+            meals=[
+                _make_meal(
+                    ingredients=[
+                        Ingredient(
+                            name="Gluten-Free Bread",
+                            quantity=2,
+                            unit="slices",
+                        ),
+                    ]
+                ),
+            ]
+        )
+        violations, warnings = _validate_allergy_compliance(plan, ["gluten"])
+        assert violations == []
+
+    def test_nut_free_butter_is_not_violation(self):
+        plan = _make_day_plan(
+            meals=[
+                _make_meal(
+                    ingredients=[
+                        Ingredient(
+                            name="nut free butter substitute",
+                            quantity=1,
+                            unit="tbsp",
+                        ),
+                    ]
+                ),
+            ]
+        )
+        violations, warnings = _validate_allergy_compliance(plan, ["nut"])
+        assert violations == []
+
+    def test_real_allergen_still_detected(self):
+        """Ensure actual allergens are still caught even with safe-suffix logic."""
+        plan = _make_day_plan(
+            meals=[
+                _make_meal(
+                    ingredients=[
+                        Ingredient(name="whole milk", quantity=1, unit="cup"),
+                    ]
+                ),
+            ]
+        )
+        violations, warnings = _validate_allergy_compliance(plan, ["milk"])
+        assert len(violations) == 1
+
+    def test_mixed_safe_and_unsafe_in_same_plan(self):
+        """A plan with both dairy-free and real dairy should flag only the real one."""
+        plan = _make_day_plan(
+            meals=[
+                _make_meal(
+                    title="Safe Meal",
+                    ingredients=[
+                        Ingredient(
+                            name="dairy-free yogurt", quantity=1, unit="cup"
+                        ),
+                    ],
+                ),
+                _make_meal(
+                    title="Unsafe Meal",
+                    ingredients=[
+                        Ingredient(
+                            name="dairy cream", quantity=0.5, unit="cup"
+                        ),
+                    ],
+                ),
+            ]
+        )
+        violations, warnings = _validate_allergy_compliance(plan, ["dairy"])
+        assert len(violations) == 1
+        assert "Unsafe Meal" in violations[0]
+
     def test_llm_flagged_warnings_are_warnings_not_violations(self):
         plan = _make_day_plan(
             meals=[
