@@ -32,6 +32,8 @@ GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_REVOKE_URL = "https://oauth2.googleapis.com/revoke"
 CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar"
+DRIVE_READONLY_SCOPE = "https://www.googleapis.com/auth/drive.readonly"
+ALL_SCOPES = [CALENDAR_SCOPE, DRIVE_READONLY_SCOPE]
 
 
 @router.get("/google/start", response_model=GoogleAuthStartResponse)
@@ -49,7 +51,7 @@ async def google_auth_start(
         "client_id": settings.google_oauth_client_id,
         "redirect_uri": settings.google_oauth_redirect_url,
         "response_type": "code",
-        "scope": CALENDAR_SCOPE,
+        "scope": " ".join(ALL_SCOPES),
         "access_type": "offline",
         "prompt": "consent",
     }
@@ -104,7 +106,7 @@ async def google_auth_callback(
         access_token=access_token,
         refresh_token=refresh_token,
         token_expiry=token_expiry,
-        scopes=[CALENDAR_SCOPE],
+        scopes=ALL_SCOPES,
     )
 
     logger.info("Google OAuth tokens stored for household %s", household_id)
