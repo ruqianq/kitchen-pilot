@@ -212,6 +212,21 @@ export interface PlanPublishResponse {
   calendar_event_ids: string[];
 }
 
+export interface ShoppingItemWithLinks {
+  name: string;
+  quantity: number;
+  unit: string;
+  category: string;
+  checked: boolean;
+  retailer_links: { walmart: string; instacart: string; google: string };
+}
+
+export interface ShoppingListDetailResponse {
+  id: string;
+  items: ShoppingItemWithLinks[];
+  checked_indices: number[];
+}
+
 // --- Plan API ---
 
 export const planApi = {
@@ -241,6 +256,21 @@ export const planApi = {
     }),
 
   delete: (id: string) => apiFetch<void>(`/plan/${id}`, { method: "DELETE" }),
+
+  getShoppingDetail: (planId: string) =>
+    apiFetch<ShoppingListDetailResponse>(`/plan/${planId}/shopping-list/detail`),
+
+  updateChecklist: (planId: string, checkedIndices: number[]) =>
+    apiFetch<{ checked_indices: number[] }>(`/plan/${planId}/shopping-list/checklist`, {
+      method: "PATCH",
+      body: JSON.stringify({ checked_indices: checkedIndices }),
+    }),
+
+  exportCsv: (planId: string) =>
+    fetch(`${API_BASE}/plan/${planId}/shopping-list/export/csv`).then((res) => {
+      if (!res.ok) throw new Error("Export failed");
+      return res.blob();
+    }),
 };
 
 // --- Auth Types ---

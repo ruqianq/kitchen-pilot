@@ -7,6 +7,7 @@ and deleting weekly meal plans.
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from kitchen_pilot.db.engine import get_session
@@ -14,15 +15,18 @@ from kitchen_pilot.db.models import PlanStatus
 from kitchen_pilot.dependencies import get_household_id
 from kitchen_pilot.schemas.plan import WeeklyPlan
 from kitchen_pilot.schemas.plan_api import (
+    ChecklistUpdateRequest,
     PlanGenerateRequest,
     PlanGenerateResponse,
     PlanPublishRequest,
     PlanPublishResponse,
+    ShoppingItemWithLinks,
+    ShoppingListDetailResponse,
     ShoppingListResponse,
     WeeklyPlanDetailResponse,
     WeeklyPlanResponse,
 )
-from kitchen_pilot.services import calendar_service
+from kitchen_pilot.services import calendar_service, grocery_export
 from kitchen_pilot.services import plan as plan_svc
 
 router = APIRouter(prefix="/plan", tags=["plan"])
@@ -130,6 +134,80 @@ async def publish_plan(
         status="published",
         calendar_events_created=events_created,
         calendar_event_ids=event_ids,
+    )
+
+
+@router.get(
+    "/{plan_id}/shopping-list/detail",
+    response_model=ShoppingListDetailResponse,
+)
+async def get_shopping_list_detail(
+    plan_id: uuid.UUID,
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+):
+    """Get the shopping list with retailer links and checked state."""
+    shopping = await plan_svc.get_plan_shopping_list(session, plan_id)
+    if shopping is None:
+        raise HTTPException(status_code=404, detail="Shopping list not found")
+
+    raw_items = shopping.items_json or []
+    checked = (shopping.exports_json or {}).get("checked_indices", [])
+
+    items = [
+        ShoppingItemWithLinks(
+            name=grocery_export.normalize_ingredient(item.get("name", "")),
+            quantity=item.get("quantity", 0),
+            unit=item.get("unit", ""),
+            category=item.get("category", "Other"),
+            checked=i in checked,
+            retailer_links=grocery_export.get_retailer_links(item.get("name", "")),
+        )
+        for i, item in enumerate(raw_items)
+    ]
+
+    return ShoppingListDetailResponse(
+        id=shopping.id,
+        items=items,
+        checked_indices=checked,
+    )
+
+
+@router.patch("/{plan_id}/shopping-list/checklist")
+async def update_checklist(
+    plan_id: uuid.UUID,
+    request: ChecklistUpdateRequest,
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+):
+    """Update the checked state of shopping list items."""
+    shopping = await plan_svc.update_checklist(
+        session, plan_id, request.checked_indices
+    )
+    if shopping is None:
+        raise HTTPException(status_code=404, detail="Shopping list not found")
+    return {"checked_indices": request.checked_indices}
+
+
+@router.get("/{plan_id}/shopping-list/export/csv")
+async def export_shopping_list_csv(
+    plan_id: uuid.UUID,
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+):
+    """Export the shopping list as a CSV file."""
+    shopping = await plan_svc.get_plan_shopping_list(session, plan_id)
+    if shopping is None:
+        raise HTTPException(status_code=404, detail="Shopping list not found")
+
+    items = shopping.items_json or []
+    csv_content = grocery_export.generate_csv(items)
+
+    plan = await plan_svc.get_plan(session, plan_id)
+    week = plan.week_start_date if plan else "unknown"
+    filename = f"shopping-list-{week}.csv"
+
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

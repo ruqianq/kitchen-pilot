@@ -481,6 +481,29 @@ async def delete_plan(session: AsyncSession, plan_id: uuid.UUID) -> bool:
     return True
 
 
+async def update_checklist(
+    session: AsyncSession,
+    plan_id: uuid.UUID,
+    checked_indices: list[int],
+) -> ShoppingListModel | None:
+    """Update the checked state of shopping list items."""
+    result = await session.execute(
+        select(ShoppingListModel).where(
+            ShoppingListModel.weekly_plan_id == plan_id
+        )
+    )
+    shopping = result.scalar_one_or_none()
+    if shopping is None:
+        return None
+
+    exports = shopping.exports_json or {}
+    exports["checked_indices"] = checked_indices
+    shopping.exports_json = exports
+    await session.commit()
+    await session.refresh(shopping)
+    return shopping
+
+
 async def update_plan_status(
     session: AsyncSession,
     plan_id: uuid.UUID,

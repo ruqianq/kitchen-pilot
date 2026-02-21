@@ -101,3 +101,33 @@ class PlanPublishResponse(BaseModel):
     status: str
     calendar_events_created: int
     calendar_event_ids: list[str] = Field(default_factory=list)
+
+
+# ── Grocery export schemas ────────────────────────────────
+
+
+class ShoppingItemWithLinks(BaseModel):
+    name: str
+    quantity: float
+    unit: str
+    category: str
+    checked: bool = False
+    retailer_links: dict[str, str] = Field(default_factory=dict)
+
+
+class ShoppingListDetailResponse(BaseModel):
+    id: uuid.UUID
+    items: list[ShoppingItemWithLinks] = Field(default_factory=list)
+    checked_indices: list[int] = Field(default_factory=list)
+
+
+class ChecklistUpdateRequest(BaseModel):
+    checked_indices: list[int] = Field(
+        default_factory=list,
+        description="Indices of checked items in the shopping list",
+    )
+
+
+class ShoppingListExportResponse(BaseModel):
+    csv: str
+    filename: str

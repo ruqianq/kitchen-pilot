@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Button from "@/components/Button";
-import type { WeeklyPlanDetailResponse, MealResponse } from "@/lib/api";
+import type { WeeklyPlanDetailResponse, MealResponse, ShoppingItemWithLinks } from "@/lib/api";
 import { planApi } from "@/lib/api";
 
 const MEAL_ORDER: Record<string, number> = {
@@ -36,14 +36,50 @@ export default function PlanDetailPage() {
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const [publishResult, setPublishResult] = useState<string | null>(null);
+  const [shoppingItems, setShoppingItems] = useState<ShoppingItemWithLinks[]>([]);
+  const [checkedSet, setCheckedSet] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     planApi
       .get(planId)
-      .then(setPlan)
+      .then((p) => {
+        setPlan(p);
+        return planApi.getShoppingDetail(planId);
+      })
+      .then((detail) => {
+        setShoppingItems(detail.items);
+        setCheckedSet(new Set(detail.checked_indices));
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [planId]);
+
+  const handleCheckToggle = useCallback(
+    (index: number) => {
+      setCheckedSet((prev) => {
+        const next = new Set(prev);
+        if (next.has(index)) next.delete(index);
+        else next.add(index);
+        planApi.updateChecklist(planId, [...next]).catch(() => {});
+        return next;
+      });
+    },
+    [planId]
+  );
+
+  async function handleExportCsv() {
+    try {
+      const blob = await planApi.exportCsv(planId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `shopping-list-${plan?.week_start_date ?? "plan"}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // ignore
+    }
+  }
 
   async function handlePublish() {
     setPublishing(true);
@@ -245,32 +281,85 @@ export default function PlanDetailPage() {
         </div>
 
         {/* Shopping List */}
-        {plan.shopping_list?.items_json && (
+        {shoppingItems.length > 0 && (
           <section className="mt-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
-            <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-              Shopping List
-            </h2>
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              {(
-                plan.shopping_list.items_json as {
-                  name: string;
-                  quantity: number;
-                  unit: string;
-                  category: string;
-                }[]
-              ).map((item, i) => (
-                <label
-                  key={i}
-                  className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300"
-                >
-                  <input type="checkbox" className="rounded" />
-                  <span>
-                    {item.quantity} {item.unit} {item.name}
-                  </span>
-                  <span className="text-xs text-zinc-400">({item.category})</span>
-                </label>
-              ))}
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+                  Shopping List
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  {checkedSet.size}/{shoppingItems.length} items checked
+                </p>
+              </div>
+              <Button variant="secondary" onClick={handleExportCsv}>
+                Download CSV
+              </Button>
             </div>
+            {(() => {
+              const byCategory: Record<string, { item: ShoppingItemWithLinks; idx: number }[]> = {};
+              shoppingItems.forEach((item, idx) => {
+                const cat = item.category || "Other";
+                if (!byCategory[cat]) byCategory[cat] = [];
+                byCategory[cat].push({ item, idx });
+              });
+              const sortedCats = Object.keys(byCategory).sort();
+              return sortedCats.map((cat) => (
+                <div key={cat} className="mb-4">
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    {cat}
+                  </h3>
+                  <div className="grid grid-cols-1 gap-1 md:grid-cols-2">
+                    {byCategory[cat].map(({ item, idx }) => (
+                      <label
+                        key={idx}
+                        className={`flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors ${
+                          checkedSet.has(idx)
+                            ? "text-zinc-400 line-through"
+                            : "text-zinc-700 dark:text-zinc-300"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={checkedSet.has(idx)}
+                          onChange={() => handleCheckToggle(idx)}
+                        />
+                        <span>
+                          {item.quantity} {item.unit} {item.name}
+                        </span>
+                        <span className="ml-auto flex gap-1 text-[10px]">
+                          <a
+                            href={item.retailer_links.walmart}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded bg-blue-100 px-1 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300"
+                          >
+                            W
+                          </a>
+                          <a
+                            href={item.retailer_links.instacart}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded bg-green-100 px-1 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300"
+                          >
+                            I
+                          </a>
+                          <a
+                            href={item.retailer_links.google}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded bg-amber-100 px-1 text-amber-700 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-300"
+                          >
+                            G
+                          </a>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ));
+            })()}
           </section>
         )}
 
