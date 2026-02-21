@@ -63,14 +63,9 @@ export default function PlansPage() {
   return (
     <div className="min-h-screen bg-zinc-50 p-8 dark:bg-black">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-            Meal Plans
-          </h1>
-          <a href="/">
-            <Button variant="secondary">Home</Button>
-          </a>
-        </div>
+        <h1 className="mb-8 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+          Meal Plans
+        </h1>
 
         {/* Generator */}
         <section className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">

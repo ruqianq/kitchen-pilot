@@ -1,12 +1,16 @@
 model_list:
-  - model_name: "ollama_chat/gemma3:latest"
+  - model_name: "gpt-4o-mini"
     litellm_params:
-      model: "ollama_chat/gemma3:latest"
-      api_base: "http://ollama:11434"
+      model: "gpt-4o-mini"
 
   - model_name: "ollama_chat/qwen3:8b"
     litellm_params:
       model: "ollama_chat/qwen3:8b"
+      api_base: "http://ollama:11434"
+
+  - model_name: "ollama_chat/gemma3:latest"
+    litellm_params:
+      model: "ollama_chat/gemma3:latest"
       api_base: "http://ollama:11434"
 
   - model_name: "ollama_chat/llama3.1:8b"

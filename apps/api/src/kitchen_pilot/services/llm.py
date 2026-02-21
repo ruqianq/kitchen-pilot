@@ -1,4 +1,5 @@
 import logging
+import os
 from collections.abc import AsyncGenerator
 
 import instructor
@@ -12,6 +13,10 @@ logger = logging.getLogger(__name__)
 # Configure LiteLLM defaults
 litellm.drop_params = True
 
+# Expose OpenAI key to litellm if configured
+if settings.openai_api_key:
+    os.environ.setdefault("OPENAI_API_KEY", settings.openai_api_key)
+
 # Build instructor client wrapping async litellm
 # Use JSON mode instead of tool calling — local Ollama models don't reliably
 # produce tool_calls but handle JSON output well.
@@ -19,6 +24,13 @@ client = instructor.from_litellm(litellm.acompletion, mode=instructor.Mode.JSON)
 
 # Model escalation chain: try each in order until one succeeds
 MODEL_CHAIN = [settings.default_model, *settings.fallback_models]
+
+
+def _api_base_for_model(model: str) -> str | None:
+    """Return api_base only for Ollama models; OpenAI/cloud models need no override."""
+    if model.startswith("ollama"):
+        return settings.ollama_base_url
+    return None
 
 
 async def generate_structured[T: BaseModel](
@@ -39,14 +51,16 @@ async def generate_structured[T: BaseModel](
     for m in models:
         try:
             logger.info("Trying model %s for %s", m, response_model.__name__)
-            return await client.chat.completions.create(
+            kwargs: dict = dict(
                 model=m,
                 messages=messages,
                 response_model=response_model,
                 max_retries=max_retries,
                 temperature=temperature,
-                api_base=settings.ollama_base_url,
             )
+            if base := _api_base_for_model(m):
+                kwargs["api_base"] = base
+            return await client.chat.completions.create(**kwargs)
         except Exception as e:
             logger.warning("Model %s failed for %s: %s", m, response_model.__name__, e)
             last_error = e
@@ -63,13 +77,16 @@ async def stream_chat_completion(
     temperature: float = 0.7,
 ) -> AsyncGenerator[str, None]:
     """Stream chat completion tokens. Yields content strings."""
-    response = await litellm.acompletion(
-        model=model or settings.default_model,
+    m = model or settings.default_model
+    kwargs: dict = dict(
+        model=m,
         messages=messages,
         temperature=temperature,
         stream=True,
-        api_base=settings.ollama_base_url,
     )
+    if base := _api_base_for_model(m):
+        kwargs["api_base"] = base
+    response = await litellm.acompletion(**kwargs)
     async for chunk in response:
         delta = chunk.choices[0].delta
         if delta.content:
@@ -82,10 +99,13 @@ async def chat_completion(
     temperature: float = 0.7,
 ) -> str:
     """Simple unstructured chat completion for the chat endpoint."""
-    response = await litellm.acompletion(
-        model=model or settings.default_model,
+    m = model or settings.default_model
+    kwargs: dict = dict(
+        model=m,
         messages=messages,
         temperature=temperature,
-        api_base=settings.ollama_base_url,
     )
+    if base := _api_base_for_model(m):
+        kwargs["api_base"] = base
+    response = await litellm.acompletion(**kwargs)
     return response.choices[0].message.content or ""

@@ -16,8 +16,10 @@ class Settings(BaseSettings):
     # LLM
     litellm_base_url: str = "http://localhost:4000"
     ollama_base_url: str = "http://localhost:11434"
-    default_model: str = "ollama_chat/qwen3:8b"
+    openai_api_key: str = ""
+    default_model: str = "gpt-4o-mini"
     fallback_models: list[str] = [
+        "ollama_chat/qwen3:8b",
         "ollama_chat/gemma3:latest",
     ]
 

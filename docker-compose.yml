@@ -39,6 +39,7 @@ services:
         condition: service_started
     environment:
       - OLLAMA_API_BASE=http://ollama:11434
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
 
   api:
     build:
@@ -50,32 +51,15 @@ services:
       - DATABASE_URL=postgresql+asyncpg://kitchen:kitchen@postgres:5432/kitchen_pilot
       - LITELLM_BASE_URL=http://litellm:4000
       - OLLAMA_BASE_URL=http://ollama:11434
-      - DEFAULT_MODEL=ollama_chat/qwen3:8b
-      - FALLBACK_MODELS=["ollama_chat/gemma3:latest"]
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DEFAULT_MODEL=gpt-4o-mini
+      - FALLBACK_MODELS=["ollama_chat/qwen3:8b","ollama_chat/gemma3:latest"]
       - CORS_ORIGINS=["http://localhost:3000"]
-      - GCAL_MCP_URL=http://gcal-mcp:3100
     depends_on:
       postgres:
         condition: service_healthy
       litellm:
         condition: service_started
-
-  gcal-mcp:
-    image: node:20-slim
-    working_dir: /app
-    command: >
-      sh -c "npm install -g @anthropic-ai/supergateway @nspady/google-calendar-mcp &&
-             supergateway --port 3100 --
-             google-calendar-mcp"
-    ports:
-      - "3100:3100"
-    environment:
-      - GOOGLE_OAUTH_CREDENTIALS=/app/credentials/gcp-oauth.keys.json
-    volumes:
-      - ./credentials:/app/credentials:ro
-      - gcal_mcp_data:/app/.google-calendar-mcp
-    profiles:
-      - calendar
 
   web:
     build:
@@ -89,4 +73,3 @@ services:
 volumes:
   postgres_data:
   ollama_data:
-  gcal_mcp_data:

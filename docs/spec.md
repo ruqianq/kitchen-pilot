@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-Build a personal assistant "agentic" app that generates a **weekly cooking plan** aligned with household preferences, allergies, diet goals, and schedule; produces a **shopping list**; and **publishes** cooking events to **Google Calendar**. The app supports **chat** + **voice** interaction, uses **RAG** over Google Drive recipes/notes, and integrates **selectively** with **MCP servers** where mature.
+Build a personal assistant "agentic" app that generates a **weekly cooking plan** aligned with household preferences, allergies, diet goals, and schedule; produces a **shopping list**; and **publishes** cooking events to **Google Calendar**. The app supports **chat** + **voice** interaction, uses **RAG** over Google Drive recipes/notes, and integrates with **Google APIs** and **web search providers** via native Python clients.
 
 ---
 
@@ -43,7 +43,7 @@ Next.js web app:
 
 FastAPI (Python):
 - Orchestrator + agents runtime
-- Tool routing (MCP + native tools)
+- Tool routing (native Python tools)
 - Plan validation and publishing
 - Auth/OAuth token storage
 - RAG ingestion pipeline
@@ -61,18 +61,17 @@ FastAPI (Python):
 - LiteLLM gateway (>=1.55) for routing + logging + budget control
 - `instructor` library (>=1.7) for Pydantic validation + automatic retries
 
-### Selective MCP usage
+### External integrations (native Python)
 
-Use MCP only where server is stable:
-- Google Calendar MCP
-- Google Drive MCP
-- Web Search MCP (Brave/Tavily)
+All external services are accessed via native Python clients — no MCP sidecar containers. MCP can be introduced later if multi-app tool sharing becomes valuable.
 
-Everything else native:
-- Household DB logic
-- Nutrition tool (USDA/API + caching + unit normalization)
-- Grocery normalization + exporter
-- Voice STT/TTS
+- Google Calendar — `google-api-python-client` + `google-auth-oauthlib`
+- Google Drive — `google-api-python-client` (read-only for recipe ingestion)
+- Web Search — direct HTTP to Brave Search or Tavily REST APIs
+- Household DB logic — native SQLAlchemy
+- Nutrition tool — USDA API + caching + unit normalization
+- Grocery normalization + exporter — native Python
+- Voice STT/TTS — Whisper + TTS library
 - Cart automation (optional later)
 
 ---
@@ -101,18 +100,18 @@ Implementation:
 - Fetch vector memory: prior plans, ratings, notes ("kids hated quinoa texture").
 - Output normalized `HouseholdContext` object.
 
-**B) Calendar Agent (MCP)**
-- Read events and free windows.
+**B) Calendar Agent (Google API)**
+- Read events and free windows via `google-api-python-client`.
 - Publish cooking events for meals:
   - title: `Cook: <Meal>`
   - description: recipe link + ingredients + nutrition summary
   - location optional
 - Supports "replace existing plan" semantics:
-  - tag events with metadata (e.g., `weekly_plan_id`) so they can be updated/removed.
+  - tag events with extendedProperties (e.g., `weekly_plan_id`) so they can be updated/removed.
 
 **C) Recipe Retrieval Agent (RAG + Search)**
-- RAG over Drive recipe docs and saved notes.
-- Optional web search for new recipe candidates (allowlist domains).
+- RAG over Drive recipe docs (fetched via Google Drive API) and saved notes.
+- Optional web search for new recipe candidates via Brave/Tavily REST API (allowlist domains).
 - Output ranked recipe candidates with metadata:
   - prep time, allergens, servings, source link
 
@@ -139,9 +138,11 @@ Implementation:
 ### 5.3 Tool Router
 
 - Tools are exposed to agents via a common interface: `tool_name`, `args`, `result`, `errors`
-- MCP tools are invoked through MCP clients.
-- Native tools are Python modules with strict request/response models.
+- All tools are native Python modules with strict Pydantic request/response models.
+- Google APIs are wrapped as tools with the same interface (Calendar, Drive).
+- Web search APIs (Brave/Tavily) are wrapped as tools with the same interface.
 - All tool calls are logged to audit table + LiteLLM logs.
+- **Future**: MCP can be introduced as an alternative transport for any tool if multi-app sharing is needed.
 
 ---
 
@@ -371,19 +372,17 @@ class WeeklyPlan(BaseModel):
 
 | Component | Choice |
 |-----------|--------|
-| Model serving | Ollama v0.5+ (grammar-constrained generation via GBNF) |
-| Routing | LiteLLM >= 1.55 (use `ollama_chat/` prefix for chat endpoint) |
+| Primary model | GPT-4o-mini via OpenAI API (fast, cheap, reliable structured output) |
+| Local fallback | Ollama v0.5+ — Qwen3 8B, Gemma3 (for offline/cost-free dev) |
+| Routing | LiteLLM >= 1.55 (unified API across OpenAI + Ollama) |
 | Validation + retry | `instructor` >= 1.7 (Pydantic validation, auto error-fed retries) |
-| Primary model | Qwen3 8B or Llama 3.1 8B |
-| Fallback model | Hermes 2 Pro Mistral 7B (91% function calling, 84% JSON mode) |
-| Cloud fallback | GPT-4o-mini via LiteLLM (when local models fail) |
 
 ### LLM call pattern
 
 ```python
 client = instructor.from_litellm(litellm.acompletion)
 day_plan = await client(
-    model="ollama_chat/qwen3:8b",
+    model="gpt-4o-mini",
     messages=[...],
     response_model=DayPlan,
     max_retries=3,
@@ -391,19 +390,17 @@ day_plan = await client(
 )
 ```
 
-### 4-layer retry strategy
+### 3-layer retry strategy
 
 1. **Instructor auto-retry**: Feeds Pydantic ValidationError back to the model (max_retries=3).
-2. **Model escalation**: qwen3:8b -> llama3.1:8b -> qwen3:14b -> gpt-4o-mini.
-3. **Circuit breaker**: If a model fails >5 times in 5 minutes, skip it for a cooldown period.
-4. **Graceful degradation**: Return partial plan with confidence flags rather than blocking entirely.
+2. **Model escalation**: gpt-4o-mini -> ollama_chat/qwen3:8b -> ollama_chat/gemma3:latest.
+3. **Graceful degradation**: Return partial plan with confidence flags rather than blocking entirely.
 
 ### Known constraints
 
-- **Never combine thinking mode with structured output** (mutually incompatible in Ollama).
-- Grammar enforcement guarantees syntactic validity but not semantic correctness. Application-level validation needed for: realistic nutrition values, no repeated recipes, correct array lengths.
-- Set `num_predict` / `max_tokens` high enough for output (~1000 tokens per DayPlan).
-- temperature=0 for maximum schema adherence.
+- Application-level validation needed for: realistic nutrition values, no repeated recipes, correct array lengths.
+- Set `max_tokens` high enough for output (~1000 tokens per DayPlan).
+- temperature=0 for structured output, temperature=0.7 for chat.
 
 ---
 
@@ -449,39 +446,50 @@ For initial local single-user deployment, the household is implicitly the authen
 
 ---
 
-## 11. MCP deployment
+## 11. External integrations
 
-### Transport
+All external services are accessed via **native Python clients** within the FastAPI process. No sidecar containers or MCP servers are needed. This keeps Docker Compose simple and debugging straightforward. MCP can be layered on later if multi-app tool sharing becomes valuable.
 
-**Streamable HTTP** for Docker Compose (current MCP standard as of spec 2025-03-26). stdio does not work across container boundaries. SSE is deprecated.
+### Google Calendar
 
-### Server deployment
+| Item | Detail |
+|------|--------|
+| Library | `google-api-python-client` + `google-auth-oauthlib` |
+| Auth | OAuth 2.0 tokens managed by FastAPI (see Section 10) |
+| Operations | Read events (free window detection), create/update/delete cooking events |
+| Event tagging | `extendedProperties.private.kitchen_pilot_plan_id` for replace/remove semantics |
 
-MCP servers run as **sidecar containers** in Docker Compose. Use `supergateway` to bridge stdio-only community servers to HTTP.
+### Google Drive
 
-### Servers used
+| Item | Detail |
+|------|--------|
+| Library | `google-api-python-client` |
+| Auth | Same OAuth tokens (Drive read-only scope) |
+| Operations | List files, download text content for recipe ingestion into pgvector |
+| Scope | `drive.readonly` — no writes to user's Drive |
 
-| Server | Package | Auth |
-|--------|---------|------|
-| Google Calendar | `nspady/google-calendar-mcp` (Node) | `GOOGLE_OAUTH_CREDENTIALS` env var -> local token file |
-| Google Drive | `@modelcontextprotocol/server-gdrive` (Node) | `GDRIVE_CREDENTIALS_PATH` env var -> local token file |
-| Brave Search | `@brave/brave-search-mcp-server` (Node) | `BRAVE_API_KEY` env var |
-| Tavily Search | `tavily-mcp` (Node) | `TAVILY_API_KEY` env var |
+### Web Search
 
-### Python MCP client
-
-`fastmcp` v2.x — higher-level wrapper around official MCP Python SDK. Handles multi-server configuration.
-
-### Token sharing strategy
-
-Shared Google OAuth Client ID: FastAPI app and MCP servers use the same `gcp-oauth.keys.json`. Each MCP server manages its own token file. User consents once per MCP server on first run. Graduate to custom MCP servers that accept tokens from the app if tighter integration is needed later.
+| Item | Detail |
+|------|--------|
+| Providers | Brave Search REST API and/or Tavily REST API |
+| Library | `httpx` (direct HTTP calls) |
+| Auth | API key via env var (`BRAVE_API_KEY` / `TAVILY_API_KEY`) |
+| Operations | Search for recipe candidates; results fed to Recipe agent |
 
 ### Resilience
 
-All MCP calls wrapped with:
+All external API calls wrapped with:
 - `asyncio.wait_for()` timeout (30s default)
 - Exponential backoff retry (3 attempts, `tenacity` library)
-- Reconnection on transport failure
+- Graceful degradation (calendar/drive features disabled if OAuth not configured)
+
+### Future: MCP migration path
+
+If MCP becomes useful (e.g., sharing tools across multiple AI apps), any native integration can be wrapped as an MCP server:
+- Wrap the existing Python tool module as an MCP server using `fastmcp`
+- Deploy as a sidecar container with Streamable HTTP transport
+- No changes to agent logic — only the tool router transport layer changes
 
 ---
 
@@ -490,7 +498,7 @@ All MCP calls wrapped with:
 - OAuth tokens Fernet-encrypted at rest in Postgres.
 - Sensitive fields (biometrics) encrypted and optional.
 - Allowlist domains for web recipe sources.
-- Action confirmation required for: calendar writes, drive writes.
+- Action confirmation required for: calendar writes.
 - Audit log for all tool actions.
 - Postgres bound to 127.0.0.1 in Docker Compose (not exposed to host network).
 - Rate limiting on `/chat` endpoint (deferred to cloud deployment).
@@ -509,7 +517,7 @@ All MCP calls wrapped with:
 
 ## 14. Milestones
 
-### M0 — Foundation
+### M0 — Foundation (done)
 - Monorepo structure (uv + pnpm)
 - Docker Compose: Postgres + pgvector, Ollama, LiteLLM, FastAPI, Next.js
 - Pydantic core schemas (DayPlan, WeeklyPlan, HouseholdContext)
@@ -519,35 +527,51 @@ All MCP calls wrapped with:
 - Linting (ruff for Python, ESLint for TypeScript)
 - `.env.example` with all vars documented
 
-### M1 — Household DB + UI
+### M1 — Household DB + UI (done)
 - Profile editor, CRUD API endpoints
 - Context Agent implemented
 - Household onboarding flow in Next.js
-
-### M2 — Plan schema + Google Calendar publish (MCP)
-- Calendar MCP server deployed as sidecar
-- Calendar read + publish events
 - Plan generation pipeline (per-day decomposition)
 - Plan storage + status management
+- Plan list/detail UI with shopping list
 
-### M3 — RAG over Google Drive (MCP)
-- Drive MCP server deployed as sidecar
-- Drive ingestion pipeline to pgvector
-- Recipe agent uses RAG with citations/links
+### M2 — Chat UI + polish
+- Chat page in Next.js consuming SSE `/chat` endpoint
+- Chat message history display (threaded)
+- Alembic initial migration
+- Profile page inline add/edit (not just delete)
+- Navigation bar across all pages
+
+### M3 — Google OAuth + Calendar (native)
+- Google OAuth 2.0 flow (`/auth/google/start`, `/auth/google/callback`)
+- Token storage (Fernet-encrypted in Postgres)
+- Calendar service using `google-api-python-client`
+- Read events + free windows
+- Publish/update/remove cooking events
+- Replace existing `calendar_mcp.py` with native Google API client
 
 ### M4 — Nutrition coach
 - USDA-based lookup + caching
 - Nutrition agent computes totals and suggestions
 - Confidence field + swap suggestions
+- `/nutrition/lookup` and `/nutrition/recipe/estimate` endpoints
 
-### M5 — Grocery exporter
+### M5 — RAG over Google Drive (native)
+- Drive ingestion via `google-api-python-client` (uses OAuth tokens from M3)
+- Ingestion pipeline: Drive docs → text extraction → embeddings → pgvector
+- Recipe agent uses RAG with citations/links
+- `/rag/ingest/drive` and `/rag/search` endpoints
+
+### M6 — Grocery exporter
 - Normalization + checklist + CSV + retailer search links
 
-### M6 — Voice push-to-talk
+### M7 — Voice push-to-talk
 - Whisper STT + TTS
 - Shared chat thread
 
-### M7 — Optional
+### M8 — Optional / future
+- Web search integration (Brave/Tavily) for recipe discovery
+- MCP migration for any integration (if multi-app sharing needed)
 - Additional providers / cart automation experiments
 - Cloud deployment
 - Multi-user auth
