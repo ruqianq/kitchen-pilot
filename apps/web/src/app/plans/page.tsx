@@ -18,7 +18,7 @@ function getNextMonday(): string {
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
   confirmed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  published: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  published: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
   archived: "bg-stone-200 text-stone-500 dark:bg-stone-700 dark:text-stone-400",
 };
 
@@ -61,14 +61,14 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 p-8 dark:bg-stone-950">
+    <div className="min-h-screen p-8">
       <div className="mx-auto max-w-4xl">
-        <h1 className="mb-8 text-3xl font-bold text-stone-800 dark:text-stone-50">
+        <h1 className="mb-8 text-3xl font-bold text-orange-800 dark:text-orange-400">
           Meal Plans
         </h1>
 
         {/* Generator */}
-        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+        <section className="mb-8 rounded-2xl border border-orange-100 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
           <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
             Generate New Plan
           </h2>
@@ -112,7 +112,7 @@ export default function PlansPage() {
           )}
 
           {result && (
-            <p className="mt-4 text-sm text-green-600">
+            <p className="mt-4 text-sm text-lime-700 dark:text-lime-400">
               Plan generated!{" "}
               <a href={`/plans/${result.plan.id}`} className="underline">
                 View plan
@@ -122,7 +122,7 @@ export default function PlansPage() {
         </section>
 
         {/* Plan List */}
-        <section className="rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+        <section className="rounded-2xl border border-orange-100 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
           <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
             Existing Plans
           </h2>
@@ -138,7 +138,7 @@ export default function PlansPage() {
                 <a
                   key={p.id}
                   href={`/plans/${p.id}`}
-                  className="flex items-center justify-between rounded-lg border border-stone-100 px-4 py-3 transition-colors hover:bg-stone-100 dark:border-stone-800 dark:hover:bg-stone-900"
+                  className="flex items-center justify-between rounded-xl border border-orange-100 px-4 py-3 transition-colors hover:bg-orange-50 dark:border-stone-800 dark:hover:bg-stone-800"
                 >
                   <div>
                     <p className="font-medium text-stone-800 dark:text-stone-100">

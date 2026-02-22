@@ -37,16 +37,16 @@ export default function OnboardingPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-stone-950">
+      <div className="flex min-h-screen items-center justify-center">
         <p className="text-stone-500">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 p-8 dark:bg-stone-950">
+    <div className="min-h-screen p-8">
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-2 text-3xl font-bold text-stone-800 dark:text-stone-50">
+        <h1 className="mb-2 text-3xl font-bold text-orange-800 dark:text-orange-400">
           Set Up Your Household
         </h1>
         <p className="mb-6 text-stone-500 dark:text-stone-400">

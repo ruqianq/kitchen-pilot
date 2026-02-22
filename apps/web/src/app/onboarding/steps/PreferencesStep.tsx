@@ -114,7 +114,7 @@ export default function PreferencesStep({
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       {/* Dietary Rules */}
-      <section>
+      <section className="rounded-2xl border border-orange-100 bg-orange-50/40 p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
         <h3 className="mb-3 text-lg font-medium text-stone-800 dark:text-stone-100">
           Dietary Rules
         </h3>
@@ -145,7 +145,7 @@ export default function PreferencesStep({
       </section>
 
       {/* Food Preferences */}
-      <section>
+      <section className="rounded-2xl border border-orange-100 bg-orange-50/40 p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
         <h3 className="mb-3 text-lg font-medium text-stone-800 dark:text-stone-100">
           Food Preferences
         </h3>
@@ -177,7 +177,7 @@ export default function PreferencesStep({
       </section>
 
       {/* Nutrition Goals */}
-      <section>
+      <section className="rounded-2xl border border-orange-100 bg-orange-50/40 p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
         <h3 className="mb-3 text-lg font-medium text-stone-800 dark:text-stone-100">
           Nutrition Goals
         </h3>

@@ -239,12 +239,17 @@ export default function ChatPage() {
   const busy = streaming || recording || transcribing;
 
   return (
-    <div className="flex h-[calc(100vh-53px)] flex-col bg-stone-50 dark:bg-stone-950">
+    <div className="flex h-[calc(100vh-53px)] flex-col">
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
+                <svg className="h-8 w-8 text-orange-700 dark:text-orange-400" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8.1 13.34l2.83-2.83L3.91 3.5a4.008 4.008 0 000 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z" />
+                </svg>
+              </div>
               <h2 className="text-2xl font-bold text-stone-800 dark:text-stone-50">
                 Kitchen Pilot Chat
               </h2>
@@ -254,6 +259,22 @@ export default function ChatPage() {
               <p className="mt-1 text-xs text-stone-400">
                 Type a message or hold the mic button to speak.
               </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
+                {[
+                  "Plan this week's meals",
+                  "Quick 30-min dinners",
+                  "Kid-friendly lunch ideas",
+                  "High-protein meal prep",
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => sendMessage(suggestion)}
+                    className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm text-orange-800 transition-colors hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-900/20 dark:text-orange-300 dark:hover:bg-orange-900/40"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -265,8 +286,8 @@ export default function ChatPage() {
               <div
                 className={`group relative max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
                   msg.role === "user"
-                    ? "bg-amber-700 text-white dark:bg-amber-600 dark:text-white"
-                    : "bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100"
+                    ? "bg-orange-700 text-white dark:bg-orange-600"
+                    : "border-l-2 border-orange-200 bg-orange-50/50 text-stone-800 shadow-sm dark:border-orange-800 dark:bg-stone-800 dark:text-stone-100"
                 }`}
               >
                 <RichText text={msg.content} />
@@ -280,11 +301,11 @@ export default function ChatPage() {
                   )}
                 {/* Generate Full Plan button */}
                 {msg.planMeta && msg.role === "assistant" && !streaming && (
-                  <div className="mt-3 border-t border-stone-300 pt-3 dark:border-stone-700">
+                  <div className="mt-3 border-t border-stone-200 pt-3 dark:border-stone-700">
                     <button
                       onClick={() => handleGenerateFullPlan(i)}
                       disabled={generatingPlan !== null}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-700 px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-amber-800 disabled:opacity-50 dark:bg-amber-500 dark:text-stone-950 dark:hover:bg-amber-400"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-lime-700 px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-lime-800 disabled:opacity-50 dark:bg-lime-600 dark:text-white dark:hover:bg-lime-500"
                     >
                       {generatingPlan === i ? (
                         <>
@@ -384,13 +405,13 @@ export default function ChatPage() {
       </div>
 
       {/* Input area */}
-      <div className="border-t border-stone-200 bg-white px-6 py-4 dark:border-stone-800 dark:bg-stone-950">
+      <div className="border-t border-orange-100 bg-orange-50/60 px-6 py-4 backdrop-blur-md dark:border-stone-800/60 dark:bg-stone-900/80">
         <form
           onSubmit={handleSend}
           className="mx-auto flex max-w-3xl items-center gap-3"
         >
           <textarea
-            className="flex-1 resize-none rounded-lg border border-stone-300 px-4 py-3 text-sm outline-none focus:border-amber-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:focus:border-amber-400"
+            className="flex-1 resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:focus:border-amber-400"
             rows={1}
             placeholder={
               recording

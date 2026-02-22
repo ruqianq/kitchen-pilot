@@ -406,7 +406,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-stone-950">
+      <div className="flex min-h-screen items-center justify-center">
         <p className="text-stone-500">Loading...</p>
       </div>
     );
@@ -414,7 +414,7 @@ export default function ProfilePage() {
 
   if (!household) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-stone-50 dark:bg-stone-950">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <p className="text-stone-500">No household set up yet.</p>
         <a href="/onboarding">
           <Button>Get Started</Button>
@@ -424,14 +424,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 p-8 dark:bg-stone-950">
+    <div className="min-h-screen p-8">
       <div className="mx-auto max-w-3xl">
-        <h1 className="mb-8 text-3xl font-bold text-stone-800 dark:text-stone-50">
+        <h1 className="mb-8 text-3xl font-bold text-orange-800 dark:text-orange-400">
           Household Profile
         </h1>
 
         {/* Household Info */}
-        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+        <section className="mb-8 rounded-2xl border border-orange-100 border-l-4 border-l-orange-400 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:border-l-orange-500 dark:bg-stone-900">
           <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
             Household
           </h2>
@@ -468,14 +468,14 @@ export default function ProfilePage() {
         </section>
 
         {/* Google Calendar */}
-        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+        <section className="mb-8 rounded-2xl border border-orange-100 border-l-4 border-l-amber-400 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:border-l-amber-500 dark:bg-stone-900">
           <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
             Google Calendar
           </h2>
           {googleStatus?.connected ? (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                <p className="text-sm font-medium text-lime-700 dark:text-lime-400">
                   Connected
                 </p>
                 {googleStatus.token_expiry && (
@@ -519,7 +519,7 @@ export default function ProfilePage() {
         </section>
 
         {/* People */}
-        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+        <section className="mb-8 rounded-2xl border border-orange-100 border-l-4 border-l-lime-500 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:border-l-lime-400 dark:bg-stone-900">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
               Family Members ({people.length})
@@ -573,7 +573,7 @@ export default function ProfilePage() {
 
         {/* Health Profiles */}
         {people.length > 0 && (
-          <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+          <section className="mb-8 rounded-2xl border border-orange-100 border-l-4 border-l-rose-400 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:border-l-rose-400 dark:bg-stone-900">
             <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
               Health Profiles
             </h2>
@@ -800,7 +800,7 @@ export default function ProfilePage() {
         )}
 
         {/* Allergies */}
-        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+        <section className="mb-8 rounded-2xl border border-orange-100 border-l-4 border-l-red-400 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:border-l-red-400 dark:bg-stone-900">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
               Allergies
@@ -865,7 +865,7 @@ export default function ProfilePage() {
         </section>
 
         {/* Dietary Rules */}
-        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+        <section className="mb-8 rounded-2xl border border-orange-100 border-l-4 border-l-emerald-500 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:border-l-emerald-400 dark:bg-stone-900">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
               Dietary Rules
@@ -885,7 +885,7 @@ export default function ProfilePage() {
             {dietaryRules.map((r) => (
               <div
                 key={r.id}
-                className="flex items-center justify-between rounded-lg bg-stone-50 px-4 py-2 dark:bg-stone-900"
+                className="flex items-center justify-between rounded-lg bg-white/60 px-4 py-2 dark:bg-stone-900"
               >
                 <span className="text-sm">
                   <span className="text-stone-500">{scopeLabel(r.household_id, r.person_id)}:</span>{" "}
@@ -930,7 +930,7 @@ export default function ProfilePage() {
         </section>
 
         {/* Food Preferences */}
-        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+        <section className="mb-8 rounded-2xl border border-orange-100 border-l-4 border-l-violet-400 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:border-l-violet-400 dark:bg-stone-900">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
               Food Preferences
@@ -950,7 +950,7 @@ export default function ProfilePage() {
             {preferences.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between rounded-lg bg-stone-50 px-4 py-2 dark:bg-stone-900"
+                className="flex items-center justify-between rounded-lg bg-white/60 px-4 py-2 dark:bg-stone-900"
               >
                 <span className="text-sm">
                   <span className="text-stone-500">{scopeLabel(p.household_id, p.person_id)}:</span>{" "}
@@ -1004,7 +1004,7 @@ export default function ProfilePage() {
         </section>
 
         {/* Nutrition Goals */}
-        <section className="mb-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+        <section className="mb-8 rounded-2xl border border-orange-100 border-l-4 border-l-sky-400 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:border-l-sky-400 dark:bg-stone-900">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
               Nutrition Goals
@@ -1024,7 +1024,7 @@ export default function ProfilePage() {
             {goals.map((g) => (
               <div
                 key={g.id}
-                className="flex items-center justify-between rounded-lg bg-stone-50 px-4 py-2 dark:bg-stone-900"
+                className="flex items-center justify-between rounded-lg bg-white/60 px-4 py-2 dark:bg-stone-900"
               >
                 <span className="text-sm">
                   <span className="text-stone-500">{scopeLabel(g.household_id, g.person_id)}:</span>{" "}

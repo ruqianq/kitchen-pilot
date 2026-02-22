@@ -7,8 +7,8 @@ interface AllergyTagProps {
 }
 
 const severityColors = {
-  mild: "bg-green-100/80 text-green-800 dark:bg-green-900/60 dark:text-green-200",
-  moderate: "bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200",
+  mild: "bg-lime-100/80 text-lime-800 dark:bg-lime-900/60 dark:text-lime-200",
+  moderate: "bg-amber-100/80 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200",
   severe: "bg-red-100/80 text-red-800 dark:bg-red-900/60 dark:text-red-200",
 };
 

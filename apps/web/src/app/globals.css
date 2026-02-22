@@ -1,21 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafaf9;
+  --background: #fef7ee;
   --foreground: #1c1917;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: #c2410c;
+  --color-primary-hover: #9a3412;
+  --color-secondary: #4d7c0f;
+  --color-accent: #b45309;
+  --color-cream: #fef7ee;
+  --color-cream-dark: #292220;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0c0a09;
-    --foreground: #e7e5e4;
+    --background: #292220;
+    --foreground: #fafaf9;
   }
 }
 
@@ -23,4 +29,25 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+/* Subtle healthy-food SVG pattern background */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.045;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cg fill='%23c2410c'%3E%3C!-- carrot --%3E%3Cpath d='M40 30 l4 18 l-4 6 l-4-6z'/%3E%3Cpath d='M36 28 q4-6 8 0' fill='%234d7c0f'/%3E%3C!-- apple --%3E%3Ccircle cx='140' cy='45' r='10'/%3E%3Cpath d='M140 35 l2-6' stroke='%234d7c0f' stroke-width='1.5' fill='none'/%3E%3Cpath d='M141 30 q4-2 6 1' fill='%234d7c0f'/%3E%3C!-- broccoli --%3E%3Ccircle cx='240' cy='40' r='5' fill='%234d7c0f'/%3E%3Ccircle cx='248' cy='38' r='5' fill='%234d7c0f'/%3E%3Ccircle cx='244' cy='33' r='5' fill='%234d7c0f'/%3E%3Crect x='242' y='44' width='3' height='8' rx='1' fill='%234d7c0f'/%3E%3C!-- avocado --%3E%3Cellipse cx='60' cy='120' rx='9' ry='12' fill='%234d7c0f'/%3E%3Ccircle cx='60' cy='123' r='4' fill='%23b45309'/%3E%3C!-- lemon --%3E%3Cellipse cx='170' cy='115' rx='10' ry='8' fill='%23b45309'/%3E%3C!-- leaf --%3E%3Cpath d='M250 110 q12-15 0-25 q-12 10 0 25z' fill='%234d7c0f'/%3E%3Cline x1='250' y1='110' x2='250' y2='88' stroke='%234d7c0f' stroke-width='0.8'/%3E%3C!-- tomato --%3E%3Ccircle cx='30' cy='210' r='10'/%3E%3Cpath d='M24 201 q6-3 12 0' fill='%234d7c0f'/%3E%3C!-- pear --%3E%3Cellipse cx='140' cy='215' rx='8' ry='11'/%3E%3Cellipse cx='140' cy='202' rx='5' ry='6'/%3E%3Cpath d='M140 196 l2-5' stroke='%234d7c0f' stroke-width='1.2' fill='none'/%3E%3C!-- pea pod --%3E%3Cpath d='M225 200 q15 8 30 0 q-15 12-30 0z' fill='%234d7c0f'/%3E%3Ccircle cx='235' cy='202' r='2.5' fill='%2365a30d'/%3E%3Ccircle cx='242' cy='203' r='2.5' fill='%2365a30d'/%3E%3Ccircle cx='249' cy='202' r='2.5' fill='%2365a30d'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 280px 280px;
+}
+
+@media (prefers-color-scheme: dark) {
+  body::before {
+    opacity: 0.03;
+    filter: invert(1);
+  }
 }

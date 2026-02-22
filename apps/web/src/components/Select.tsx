@@ -15,7 +15,7 @@ export default function Select({ label, options, className = "", ...props }: Sel
       </label>
       <select
         className={`rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm outline-none
-          transition-colors focus:border-amber-600
+          transition-colors focus:border-amber-500
           dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100 dark:focus:border-amber-400
           ${className}`}
         {...props}

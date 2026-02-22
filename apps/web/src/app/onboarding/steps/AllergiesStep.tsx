@@ -66,7 +66,7 @@ export default function AllergiesStep({ people, onNext, onBack }: AllergiesStepP
       {people.map((person) => {
         const personAllergies = allergies.filter((a) => a.person_id === person.id);
         return (
-          <div key={person.id} className="rounded-xl border border-stone-200 p-4 shadow-sm dark:border-stone-800">
+          <div key={person.id} className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
             <h3 className="mb-2 font-medium text-stone-800 dark:text-stone-100">
               {person.name}
             </h3>
@@ -87,7 +87,7 @@ export default function AllergiesStep({ people, onNext, onBack }: AllergiesStepP
         );
       })}
 
-      <form onSubmit={handleAdd} className="rounded-xl border border-dashed border-stone-300 p-4 dark:border-stone-600">
+      <form onSubmit={handleAdd} className="rounded-2xl border border-dashed border-stone-300 bg-white/50 p-4 dark:border-stone-600 dark:bg-stone-900/50">
         <h3 className="mb-3 text-sm font-medium text-stone-700 dark:text-stone-300">
           Add Allergy
         </h3>

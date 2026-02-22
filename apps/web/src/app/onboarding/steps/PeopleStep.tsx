@@ -90,7 +90,7 @@ export default function PeopleStep({
         )}
       </div>
 
-      <form onSubmit={handleAdd} className="rounded-xl border border-stone-200 p-4 dark:border-stone-800">
+      <form onSubmit={handleAdd} className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
         <h3 className="mb-3 text-sm font-medium text-stone-700 dark:text-stone-300">
           Add Family Member
         </h3>

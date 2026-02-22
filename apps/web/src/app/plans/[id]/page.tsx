@@ -13,10 +13,17 @@ const MEAL_ORDER: Record<string, number> = {
   snack: 3,
 };
 
+const MEAL_TYPE_COLORS: Record<string, string> = {
+  breakfast: "text-amber-600 dark:text-amber-400",
+  lunch: "text-lime-700 dark:text-lime-400",
+  dinner: "text-orange-700 dark:text-orange-400",
+  snack: "text-amber-500 dark:text-amber-300",
+};
+
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
   confirmed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  published: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  published: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
   archived: "bg-stone-200 text-stone-500 dark:bg-stone-700 dark:text-stone-400",
 };
 
@@ -106,7 +113,7 @@ export default function PlanDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-stone-950">
+      <div className="flex min-h-screen items-center justify-center">
         <p className="text-stone-500">Loading...</p>
       </div>
     );
@@ -114,7 +121,7 @@ export default function PlanDetailPage() {
 
   if (!plan) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50 dark:bg-stone-950">
+      <div className="flex min-h-screen items-center justify-center">
         <p className="text-stone-500">Plan not found.</p>
       </div>
     );
@@ -124,12 +131,12 @@ export default function PlanDetailPage() {
   const sortedDates = Object.keys(mealsByDate).sort();
 
   return (
-    <div className="min-h-screen bg-stone-50 p-8 dark:bg-stone-950">
+    <div className="min-h-screen p-8">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-stone-800 dark:text-stone-50">
+            <h1 className="text-3xl font-bold text-orange-800 dark:text-orange-400">
               Week of {plan.week_start_date}
             </h1>
             <span
@@ -152,7 +159,7 @@ export default function PlanDetailPage() {
         </div>
 
         {publishResult && (
-          <p className="mb-4 text-sm text-green-600 dark:text-green-400">
+          <p className="mb-4 text-sm text-lime-700 dark:text-lime-400">
             {publishResult}
           </p>
         )}
@@ -162,7 +169,7 @@ export default function PlanDetailPage() {
           {sortedDates.map((dateStr) => (
             <div
               key={dateStr}
-              className="rounded-xl border border-stone-200 p-4 shadow-sm dark:border-stone-800"
+              className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900"
             >
               <h3 className="mb-3 text-sm font-semibold text-stone-500">
                 {new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
@@ -192,10 +199,10 @@ export default function PlanDetailPage() {
                     return (
                       <div
                         key={meal.id}
-                        className="rounded bg-white p-3 shadow-sm dark:bg-stone-900"
+                        className="rounded-xl bg-white/70 p-3 dark:bg-stone-800"
                       >
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-medium uppercase text-stone-400">
+                          <p className={`text-xs font-medium uppercase ${MEAL_TYPE_COLORS[meal.meal_type] ?? "text-stone-400"}`}>
                             {meal.meal_type}
                           </p>
                           {nutrition?.source && (
@@ -282,7 +289,7 @@ export default function PlanDetailPage() {
 
         {/* Shopping List */}
         {shoppingItems.length > 0 && (
-          <section className="mt-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+          <section className="mt-8 rounded-2xl border border-orange-100 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">
@@ -365,7 +372,7 @@ export default function PlanDetailPage() {
 
         {/* Summary */}
         {plan.summary_md && (
-          <section className="mt-8 rounded-xl border border-stone-200 p-6 shadow-sm dark:border-stone-800">
+          <section className="mt-8 rounded-2xl border border-orange-100 bg-orange-50/40 p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
             <h2 className="mb-4 text-xl font-semibold text-stone-800 dark:text-stone-100">
               Summary
             </h2>

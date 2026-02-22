@@ -13,9 +13,11 @@ export default function StepIndicator({ steps, currentStep }: StepIndicatorProps
           <div className="flex flex-col items-center">
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium
-                ${i <= currentStep
-                  ? "bg-amber-700 text-white dark:bg-amber-500 dark:text-stone-950"
-                  : "bg-stone-200 text-stone-500 dark:bg-stone-800 dark:text-stone-500"
+                ${i < currentStep
+                  ? "bg-lime-600 text-white dark:bg-lime-500"
+                  : i === currentStep
+                    ? "bg-orange-700 text-white dark:bg-orange-600"
+                    : "bg-stone-200 text-stone-500 dark:bg-stone-800 dark:text-stone-500"
                 }`}
             >
               {i + 1}
@@ -34,7 +36,7 @@ export default function StepIndicator({ steps, currentStep }: StepIndicatorProps
             <div
               className={`mx-2 h-0.5 w-12 sm:w-20 ${
                 i < currentStep
-                  ? "bg-amber-700 dark:bg-amber-500"
+                  ? "bg-lime-600 dark:bg-lime-500"
                   : "bg-stone-200 dark:bg-stone-800"
               }`}
             />

@@ -17,7 +17,7 @@ export default function Input({ label, error, className = "", ...props }: InputP
         className={`rounded-xl border px-3 py-2 text-sm outline-none transition-colors
           ${error
             ? "border-red-500 focus:border-red-500"
-            : "border-stone-300 focus:border-amber-600 dark:border-stone-600 dark:focus:border-amber-400"
+            : "border-stone-300 focus:border-amber-500 dark:border-stone-600 dark:focus:border-amber-400"
           }
           bg-white dark:bg-stone-900 dark:text-stone-100 ${className}`}
         {...props}
