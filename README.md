@@ -165,6 +165,290 @@ The chat router uses regex-based intent detection to route messages:
 
 All responses stream via SSE (Server-Sent Events).
 
+## Agentic Flows
+
+### Flow 1: Chat Message (conversational)
+
+The primary user-facing flow. A single chat message may trigger multiple agent pipelines depending on detected intent.
+
+```
+User sends message
+       │
+       ▼
+┌─────────────────────┐
+│  POST /chat          │
+│  (chat router)       │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  ContextAgent        │  Load household context from DB
+│  (people, allergies, │  (people, allergies, dietary rules,
+│   rules, goals,      │   preferences, goals, biometrics,
+│   health profiles)   │   health conditions)
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  Build system prompt │  Inject household context into LLM
+│  with full household │  system message (allergies marked
+│  context             │  CRITICAL, rules, goals, etc.)
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────────────────────────────┐
+│  Intent Detection (regex-based, parallel)    │
+│                                              │
+│  ┌──────────┐  ┌──────────┐  ┌───────────┐  │
+│  │ Search?  │  │  Plan?   │  │ Nutrition? │  │
+│  └────┬─────┘  └────┬─────┘  └─────┬─────┘  │
+│       │              │              │         │
+└───────┼──────────────┼──────────────┼────────┘
+        │              │              │
+        ▼              ▼              ▼
+   ┌─────────┐   ┌──────────┐  ┌──────────────┐
+   │ Web      │   │ Plan     │  │ Nutrition    │
+   │ Search   │   │ Agent    │  │ Coach Agent  │
+   │ Service  │   │ (preview)│  │              │
+   │ (Brave/  │   │ struct.  │  │ Deterministic│
+   │ Tavily)  │   │ LLM call │  │ calorie/macro│
+   └────┬─────┘   └────┬─────┘  │ calculations │
+        │              │         └──────┬───────┘
+        │              │                │
+        ▼              ▼                ▼
+┌─────────────────────────────────────────────┐
+│  Augmented messages (context injected)       │
+│  [system prompt + search results +           │
+│   plan preview + nutrition analysis +        │
+│   chat history + user message]               │
+└──────────────────┬──────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────┐
+│  LLM Streaming (via LiteLLM proxy)           │
+│  GPT-4o-mini → Ollama fallbacks              │
+│  Response streamed as SSE to frontend        │
+└─────────────────────────────────────────────┘
+```
+
+**Key behaviors:**
+- Intents are **not mutually exclusive** — a message like "find me a high-protein dinner recipe" triggers both search and nutrition
+- Plan intent generates a **single-day preview** in chat; full 7-day plans use the dedicated plan flow below
+- All agent results are injected as additional system messages before the LLM generates the final response
+- The LLM never sees raw DB models — everything passes through the `HouseholdContext` Pydantic schema
+
+### Flow 2: Plan Generation (7-day meal plan)
+
+Triggered from the Plans page via `POST /plans/generate`. This is the most complex pipeline.
+
+```
+User clicks "Generate Plan"
+       │
+       ▼
+┌─────────────────────┐
+│  POST /plans/generate│
+│  (plans router)      │
+│  week_start_date,    │
+│  overrides, notes    │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  PlanAgent.run()     │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  Step 1: Load        │
+│  ContextAgent        │──▶ HouseholdContext
+│  (household context) │    (people, allergies, rules,
+└──────────┬──────────┘     preferences, goals)
+           │
+           ▼
+┌─────────────────────┐
+│  Step 2: Build       │
+│  system prompt       │──▶ Allergies marked CRITICAL
+│  from context        │    Rules and preferences included
+└──────────┬──────────┘
+           │
+           ▼
+┌──────────────────────────────────────────┐
+│  Step 3: Loop 7 days (sequential)         │
+│                                           │
+│  For each day:                            │
+│  ┌────────────────────────────────────┐   │
+│  │ a. Build day prompt                │   │
+│  │    (date, previous dinners for     │   │
+│  │     variety, max cook time, notes) │   │
+│  ├────────────────────────────────────┤   │
+│  │ b. generate_structured(DayPlan)    │   │
+│  │    LLM → Pydantic DayPlan model   │   │
+│  │    (instructor validates schema,   │   │
+│  │     retries up to 3x on failure)   │   │
+│  ├────────────────────────────────────┤   │
+│  │ c. Allergy compliance check        │   │
+│  │    Every ingredient scanned for    │   │
+│  │    allergens. False positives      │   │
+│  │    handled (e.g. "dairy-free").    │   │
+│  │    HARD BLOCK if violation found   │   │
+│  │    (unless override provided).     │   │
+│  ├────────────────────────────────────┤   │
+│  │ d. USDA nutrition refinement       │   │
+│  │    Cross-reference LLM estimates   │   │
+│  │    with USDA FoodData Central.     │   │
+│  │    Results cached in nutrition_    │   │
+│  │    cache table.                    │   │
+│  ├────────────────────────────────────┤   │
+│  │ e. Track dinner titles for next    │   │
+│  │    day's variety prompt            │   │
+│  └────────────────────────────────────┘   │
+│                                           │
+└──────────────────┬───────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────┐
+│  Step 4: Post-processing                     │
+│  ├─ Compute daily nutrition totals           │
+│  │  (sum calories, protein, carbs, fat,      │
+│  │   fiber across all meals per day)         │
+│  ├─ Aggregate shopping list                  │
+│  │  (merge duplicate ingredients across      │
+│  │   7 days, categorize: produce, meat,      │
+│  │   dairy, spices, pantry)                  │
+│  └─ Generate markdown summary                │
+└──────────────────┬──────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────┐
+│  Step 5: Persist to DB                       │
+│  ├─ WeeklyPlan (status: DRAFT)               │
+│  ├─ 21 Meal records (7 days × 3 meals)       │
+│  │  (each with ingredients_json,             │
+│  │   nutrition_json, flags_json)             │
+│  └─ ShoppingList (aggregated items_json)     │
+└──────────────────┬──────────────────────────┘
+                   │
+                   ▼
+          Plan ready for review
+          (DRAFT → CONFIRMED → PUBLISHED)
+```
+
+**Plan lifecycle:** `DRAFT` → `CONFIRMED` → `PUBLISHED` → `ARCHIVED`
+- Publishing can trigger Google Calendar event creation (if OAuth connected)
+
+### Flow 3: Nutrition Coach (health-aware recommendations)
+
+Invoked automatically when the chat detects nutrition-related questions, or used internally by the plan generator.
+
+```
+Chat message with nutrition intent
+(e.g. "how many calories should my family eat?")
+       │
+       ▼
+┌──────────────────────┐
+│  NutritionCoachAgent │
+│  .run()              │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────────────────────────┐
+│  For each person in household:            │
+│                                           │
+│  ┌────────────────────────────────────┐   │
+│  │ Tier 1: Deterministic Calculations │   │
+│  │                                    │   │
+│  │ • Compute age from DOB             │   │
+│  │ • Mifflin-St Jeor BMR equation     │   │
+│  │   (gender + age + height + weight) │   │
+│  │ • Activity level multiplier        │   │
+│  │   (sedentary → very active)        │   │
+│  │ • Health condition adjustments:    │   │
+│  │   - Diabetes: lower carb %, lower  │   │
+│  │     sugar limit                    │   │
+│  │   - Hypertension: lower sodium     │   │
+│  │   - Heart disease: lower sat. fat  │   │
+│  │   - Kidney disease: lower protein  │   │
+│  │ • Age-specific adjustments         │   │
+│  │   (children, teens, seniors)       │   │
+│  ├────────────────────────────────────┤   │
+│  │ Output per person:                 │   │
+│  │ • Daily calories (kcal)            │   │
+│  │ • Macro split (protein/carbs/fat)  │   │
+│  │ • Fiber target                     │   │
+│  │ • Sodium & sugar limits            │   │
+│  │ • Dietary guidelines list          │   │
+│  │ • Foods to emphasize / limit       │   │
+│  │ • Warnings                         │   │
+│  └────────────────────────────────────┘   │
+│                                           │
+└──────────────────┬───────────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────────┐
+│  Tier 2: Chat Summary (if from chat)      │
+│  Build natural-language analysis from     │
+│  all person recommendations.              │
+│  Injected into LLM context so it can     │
+│  answer conversationally.                 │
+└──────────────────────────────────────────┘
+```
+
+### Flow 4: RAG Document Search
+
+Used for recipe retrieval from ingested Google Drive documents.
+
+```
+Document Ingestion:              Semantic Search:
+POST /rag/ingest                 POST /rag/search
+       │                                │
+       ▼                                ▼
+┌──────────────┐                ┌──────────────┐
+│ Chunk text   │                │ Embed query  │
+│ into segments│                │ (1536-dim)   │
+└──────┬───────┘                └──────┬───────┘
+       │                               │
+       ▼                               ▼
+┌──────────────┐                ┌──────────────┐
+│ Generate     │                │ pgvector     │
+│ embeddings   │                │ cosine       │
+│ (1536-dim)   │                │ similarity   │
+└──────┬───────┘                │ search       │
+       │                        └──────┬───────┘
+       ▼                               │
+┌──────────────┐                       ▼
+│ Store in     │                Top-K results
+│ memory_      │                with metadata
+│ documents    │
+│ table        │
+└──────────────┘
+```
+
+### Agent Framework
+
+All agents share this contract:
+
+```python
+class BaseAgent(ABC, Generic[TInput, TOutput]):
+    name: str
+    description: str
+
+    async def run(self, input: TInput, context: AgentContext) -> AgentResult[TOutput]
+
+class AgentContext:
+    household_id: UUID
+    session: AsyncSession      # DB session for queries
+    correlation_id: str        # Request tracing
+
+class AgentResult(Generic[TOutput]):
+    success: bool
+    data: TOutput | None       # Typed output
+    error: str | None
+    warnings: list[str]
+    metadata: dict[str, Any]
+```
+
+Agents are registered in `AgentRegistry` (dict-based, supports discovery via `list_agents()`). The framework enforces typed I/O — every agent declares its Pydantic input/output models at the class level.
+
 ## Prerequisites
 
 - Docker + Docker Compose
