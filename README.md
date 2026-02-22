@@ -144,6 +144,105 @@ Key constraints: `dietary_rule`, `food_preference`, and `nutrition_goal` use CHE
 
 All agents extend `BaseAgent[TInput, TOutput]` with typed Pydantic models and a shared `AgentContext` (household ID, async session, correlation ID).
 
+### Agent Interconnection Diagram
+
+```
+                              ┌─────────────────────────────────────┐
+                              │            Frontend (Next.js)        │
+                              │                                     │
+                              │   Chat Page        Plans Page       │
+                              │      │                 │            │
+                              └──────┼─────────────────┼────────────┘
+                                     │                 │
+                              POST /chat          POST /plans/generate
+                                     │                 │
+                              ┌──────▼─────────────────▼────────────┐
+                              │          FastAPI Routers             │
+                              │                                     │
+                              │  ┌────────────┐  ┌──────────────┐   │
+                              │  │ Chat Router│  │ Plans Router │   │
+                              │  └─────┬──────┘  └──────┬───────┘   │
+                              └────────┼────────────────┼───────────┘
+                                       │                │
+                         ┌─────────────┼────────────────┼──────────────┐
+                         │             ▼                ▼              │
+                         │  ┌─────────────────────────────────────┐   │
+                         │  │          ① ContextAgent              │   │
+                         │  │   Loads HouseholdContext from DB     │   │
+                         │  │   (people, allergies, rules, goals,  │   │
+                         │  │    biometrics, health conditions)    │   │
+                         │  └──────────────┬──────────────────────┘   │
+                         │                 │                          │
+                         │                 │ HouseholdContext          │
+                         │          ┌──────┴──────┐                   │
+                         │          │             │                   │
+                         │          ▼             ▼                   │
+                         │  ┌──────────────┐  ┌───────────────────┐   │
+                         │  │ ③ Nutrition  │  │  ② PlanAgent      │   │
+                         │  │ CoachAgent   │  │                   │   │
+                         │  │              │  │  7-day plan gen   │   │
+                         │  │ Deterministic│  │  (structured LLM  │   │
+                         │  │ calorie/macro│  │   output per day) │   │
+                         │  │ calculations │  │                   │   │
+                         │  │ per person   │  │  ┌─────────────┐  │   │
+                         │  │              │  │  │ Per-day loop│  │   │
+                         │  │  ┌────────┐  │  │  │ LLM call    │  │   │
+                         │  │  │Mifflin │  │  │  │ Allergy chk │  │   │
+                         │  │  │St Jeor │  │  │  │ USDA refine │  │   │
+                         │  │  │BMR eq. │  │  │  └─────────────┘  │   │
+                         │  │  └────────┘  │  │                   │   │
+                         │  └──────┬───────┘  └────────┬──────────┘   │
+                         │         │                   │              │
+                         │         ▼                   ▼              │
+                         │  Nutrition           WeeklyPlan + Meals    │
+                         │  Recommendations     + ShoppingList        │
+                         │                                            │
+                         │           Agent Layer                      │
+                         └────────────────────────────────────────────┘
+                                       │                │
+                              ┌────────▼────────────────▼───────────┐
+                              │          External Services           │
+                              │                                     │
+                              │  ┌──────────┐  ┌─────────────────┐  │
+                              │  │ LiteLLM  │  │  USDA FoodData  │  │
+                              │  │ Proxy    │  │  Central API    │  │
+                              │  │ (LLM)   │  │  (nutrition)    │  │
+                              │  └──────────┘  └─────────────────┘  │
+                              │  ┌──────────┐  ┌─────────────────┐  │
+                              │  │ Brave /  │  │  Google Calendar│  │
+                              │  │ Tavily   │  │  (OAuth)        │  │
+                              │  │ (search) │  │                 │  │
+                              │  └──────────┘  └─────────────────┘  │
+                              └─────────────────────────────────────┘
+
+Data flow summary:
+
+  Chat Router ──▶ ContextAgent ──▶ NutritionCoachAgent
+       │                │
+       │                └──────────▶ (plan preview via LLM)
+       │
+       └──▶ WebSearchService (Brave/Tavily)
+
+  Plans Router ──▶ PlanAgent ──▶ ContextAgent
+                       │
+                       ├──▶ LLM (structured DayPlan × 7)
+                       ├──▶ Allergy compliance validator
+                       └──▶ USDA nutrition refinement
+```
+
+### How the agents connect
+
+| Agent | Called by | Depends on | Outputs |
+|-------|----------|-----------|---------|
+| **ContextAgent** | Chat Router, PlanAgent | PostgreSQL (household data) | `HouseholdContext` — normalized view of all household data |
+| **PlanAgent** | Plans Router, Chat Router (preview) | ContextAgent, LLM, USDA API | `WeeklyPlan` + 21 Meals + ShoppingList |
+| **NutritionCoachAgent** | Chat Router (nutrition intent) | ContextAgent (HouseholdContext) | Per-person calorie/macro recommendations |
+
+- **ContextAgent is the shared foundation** — both PlanAgent and NutritionCoachAgent consume its `HouseholdContext` output
+- **PlanAgent uses LLM + validation** — it calls the LLM 7 times (once per day), validates allergy compliance, and refines nutrition via USDA
+- **NutritionCoachAgent is purely deterministic** — no LLM calls, just Mifflin-St Jeor equations adjusted for health conditions
+- **The Chat Router is the orchestrator** — it decides which agents to invoke based on regex intent detection, then injects all results into the LLM context for the final streamed response
+
 ### ContextAgent
 Loads full household context from the database — people, allergies, dietary rules, food preferences, nutrition goals, biometrics, and health conditions. Used by both the chat router and other agents.
 
